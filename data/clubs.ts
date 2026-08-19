@@ -22,7 +22,7 @@ export const clubEvents: ClubEvent[] = [
     eventName: "Traitors",
     tagline: "Trust no one. Read every move.",
     description:
-      "A high-stakes social deduction game where alliances shift and secrets matter. Bring your instincts, your poker face, and your sharpest strategy.",
+      "A 2.5 to 3-hour social deduction game where players are secretly assigned as Traitors or Faithfuls.Faithfuls work through team missions and voting rounds to uncover hidden Traitors before getting eliminated.Designed to test strategic thinking, teamwork, and communication in an engaging, competitive setup.",
     fee: 0,
     day: 1,
     startTime: "10:00",
@@ -34,10 +34,10 @@ export const clubEvents: ClubEvent[] = [
   {
     id: "sports-side-futsal",
     club: "Sports Club",
-    eventName: "Side Futsal Tournament",
+    eventName: "Futsal Tournament",
     tagline: "Small pitch. Big energy.",
     description:
-      "Fast feet and faster decisions meet in this compact futsal showdown. Gather your squad and battle through a high-intensity tournament.",
+      "An inter-college 5-a-side futsal tournament bringing together teams to compete in a fast-paced environment.Features knockout stages leading into quarter-finals, semi-finals, and finals over a 1 to 2-day period.Designed to promote teamwork, discipline, sportsmanship, and healthy competition among students across colleges.",
     fee: 0,
     day: 1,
     startTime: "10:00",

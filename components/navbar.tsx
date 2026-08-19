@@ -148,6 +148,16 @@ function AuthActions({
     </div>
   );
 }
+
+const UAI_INSTAGRAM = "https://www.instagram.com/universalaiuniversity/";
+
+const policyLinks = [
+  { label: "Terms", href: "/terms" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Refunds", href: "/refunds" },
+  { label: "Contact", href: "/contact" },
+];
+
 export function Footer() {
   return (
     <footer className="site-footer">
@@ -158,9 +168,14 @@ export function Footer() {
         </p>
       </div>
       <div className="footer-links">
-        <a href="#instagram">Instagram</a>
-        <a href="#discord">Discord</a>
-        <a href="#contact">Contact</a>
+        <a href="https://www.instagram.com/official.rush4rush?igsh=Nm4zcjZ1Y2VsbnFm" target="_blank" rel="noopener noreferrer">
+          Instagram
+        </a>
+        {policyLinks.map((link) => (
+          <Link key={link.href} href={link.href}>
+            {link.label}
+          </Link>
+        ))}
       </div>
       <p className="footer-meta">© 2026 Rush4Rush. Built for the next wave.</p>
     </footer>
