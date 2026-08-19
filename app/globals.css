@@ -151,3 +151,9 @@
   font-size: 0.8rem; color: rgba(255,255,255,0.5);
   text-align: center; max-width: 420px; margin: 0;
 }
+
+.scanner-who {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+}

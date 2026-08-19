@@ -39,6 +39,7 @@ type Match = {
 };
 
 const reasonCopy: Record<string, string> = {
+  NOT_YOUR_EVENT: "You're not assigned to this event",
   BAD_TOKEN: "Not a valid R4R ticket",
   NOT_FOUND: "Ticket not recognised",
   NOT_CONFIRMED: "Payment not confirmed yet",
@@ -57,6 +58,7 @@ export function VolunteerScanner({
   const [tab, setTab] = useState<"camera" | "phone">("camera");
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [count, setCount] = useState(0);
+  const [stats, setStats] = useState<{ inside: number; expected: number } | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
   const [torchOn, setTorchOn] = useState(false);
@@ -82,15 +84,44 @@ export function VolunteerScanner({
 
   const eventName = events.find((e) => e.id === eventId)?.name ?? "";
 
+  /**
+   * Live door numbers, refreshed on event change and after every check-in.
+   * "142 of 300 in" is the figure a volunteer is asked for; a session counter
+   * that resets on reload is not.
+   */
+  const loadStats = useCallback(async () => {
+    if (!eventId) return;
+    try {
+      const res = await apiGet<{ inside: number; expected: number }>(
+        `/api/scan/stats?eventId=${encodeURIComponent(eventId)}`,
+      );
+      setStats(res);
+    } catch {
+      setStats(null);
+    }
+  }, [eventId]);
+
+  useEffect(() => {
+    void loadStats();
+  }, [loadStats]);
+
   const show = useCallback((v: Verdict) => {
     setVerdict(v);
-    if (v.result === "OK") setCount((c) => c + 1);
+    if (v.result === "OK") {
+      setCount((c) => c + 1);
+      // Refresh the door count so the number on screen stays true as the
+      // queue moves, including anyone another volunteer is scanning in.
+      void loadStats();
+    }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setVerdict(null);
       lockRef.current = false;
     }, 2000);
-  }, []);
+    // loadStats must be a dependency: with an empty array this closure would
+    // capture the FIRST eventId forever, so after switching doors the count
+    // would silently keep refreshing the wrong event.
+  }, [loadStats]);
 
   const submitToken = useCallback(
     async (token: string) => {
@@ -272,9 +303,20 @@ export function VolunteerScanner({
           <em>IN.</em>
         </h1>
         <p className="gated-copy">
-          {user.name} · {count} checked in this session
+          {stats
+            ? `${stats.inside} of ${stats.expected} checked in`
+            : "Loading door count…"}
+          {count > 0 ? ` · ${count} by you` : ""}
         </p>
+        <p className="scanner-who">Scanning as {user.name}</p>
       </header>
+
+      {events.length === 0 && (
+        <p className="auth-error">
+          You&apos;re not assigned to any events yet. Ask the core team to add you to a club before
+          your shift.
+        </p>
+      )}
 
       <div className="scanner-controls">
         <CustomListbox

@@ -34,6 +34,15 @@ async function main() {
     process.exit(1);
   }
 
+  /**
+   * Volunteers do NOT need a club: the festival entry pass is open to every
+   * volunteer, so an unassigned one can still work the gate. Give them a club
+   * only if they should also scan that club's own events.
+   */
+  if (role === "volunteer" && !clubId) {
+    console.log("Note: no club given — this volunteer can scan the gate pass only.");
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {

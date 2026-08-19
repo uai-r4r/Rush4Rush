@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser, hasAtLeast } from "@/lib/auth-server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { VolunteerScanner } from "@/components/volunteer-scanner";
 
 /**
@@ -12,14 +12,8 @@ export default async function ScanRoute() {
   const user = await getCurrentUser();
   if (!user || !hasAtLeast(user.role, "volunteer")) redirect("/");
 
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("events_with_clubs")
-    .select("id, name, day, is_entry_pass, club_names")
-    .eq("is_published", true)
-    .order("is_entry_pass", { ascending: false })
-    .order("day")
-    .order("name");
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("scannable_events");
 
   /**
    * One option per event, even for collabs. Level Up is a single row shared by
@@ -27,7 +21,15 @@ export default async function ScanRoute() {
    * and every valid ticket scans green — which was not true when the collab
    * existed as two separate events.
    */
-  const events = (data ?? []).map((e) => {
+  type ScannableEvent = {
+    id: string;
+    name: string;
+    day: number | null;
+    is_entry_pass: boolean;
+    club_names: string[] | null;
+  };
+
+  const events = ((data ?? []) as ScannableEvent[]).map((e) => {
     const clubs = (e.club_names as string[] | null) ?? [];
     const label = e.is_entry_pass
       ? `${e.name} (gate)`
