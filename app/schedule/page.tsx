@@ -73,7 +73,7 @@ function EventModal({ event, onClose }: { event: ClubEvent; onClose: () => void 
         <p className="eyebrow">Event brief // day {event.day}</p>
         <p className="event-category">{event.category}</p>
         <h2 id="schedule-event-title">{event.eventName}</h2>
-        <p className="event-modal-club">Hosted by {event.club}</p>
+        <p className="event-modal-club">Hosted by {event.clubs.join(" × ")}</p>
         <p className="event-description">{event.description}</p>
         <div className="event-detail-grid">
           <div>
@@ -124,7 +124,7 @@ function ScheduleBlock({
       onClick={() => ref.current && onOpen(event, ref.current)}
     >
       <strong>{event.eventName}</strong>
-      <span>{event.club}</span>
+      <span>{event.clubs.join(" × ")}</span>
       <small>{event.venue}</small>
       {isNow(event) && <i className="now-dot" aria-label="Happening now" />}
     </button>
@@ -227,7 +227,7 @@ export default function SchedulePage() {
               </span>
               <strong>{event.eventName}</strong>
               <small>
-                {event.club} // {event.venue}
+                {event.clubs.join(" × ")} // {event.venue}
               </small>
             </button>
           ))}
