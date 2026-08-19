@@ -76,7 +76,7 @@ function EventModal({
         <p className="eyebrow">Event brief // day {event.day}</p>
         <p className="event-category">{event.category}</p>
         <h2 id="event-modal-title">{event.eventName}</h2>
-        <p className="event-modal-club">Hosted by {event.club}</p>
+        <p className="event-modal-club">Hosted by {event.clubs.join(" × ")}</p>
         <p className="event-description">{event.description}</p>
         <div className="event-detail-grid">
           <div>
@@ -130,7 +130,7 @@ function EventCard({
         <span className="event-day">Day {event.day}</span>
       </div>
       <h2>{event.eventName}</h2>
-      <p className="event-club">{event.club}</p>
+      <p className="event-club">{event.clubs.join(" × ")}</p>
       <div className="event-card-meta">
         <span>{event.fee === 0 ? "Free" : `Rs. ${event.fee}`}</span>
         <span>{event.teamSize}</span>
@@ -151,7 +151,7 @@ export default function EventsPage() {
     return (
       matchesCategory &&
       (!search ||
-        `${event.eventName} ${event.club} ${event.category}`.toLowerCase().includes(search))
+        `${event.eventName} ${event.clubs.join(" × ")} ${event.category}`.toLowerCase().includes(search))
     );
   });
   const closeModal = () => {

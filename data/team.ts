@@ -8,28 +8,28 @@ export type TeamMember = {
 
 export const techTeam: TeamMember[] = [
   {
-    name: "Aarav Mehta",
+    name: "Divyansh Routray",
     role: "Tech Lead",
     photo: "/team/aarav-mehta.jpg",
     linkedin: "https://www.linkedin.com/",
     github: "https://github.com/",
   },
   {
-    name: "Ishita Rao",
-    role: "Frontend Engineer",
+    name: "Aryaman Singh",
+    role: "Frontend Engineer & UI/UX Designer",
     photo: "/team/ishita-rao.jpg",
     linkedin: "https://www.linkedin.com/",
     github: "https://github.com/",
   },
   {
-    name: "Kabir Shah",
+    name: "Pushpak Sarode",
     role: "Backend Engineer",
     photo: "/team/kabir-shah.jpg",
     linkedin: "https://www.linkedin.com/",
     github: "https://github.com/",
   },
   {
-    name: "Mira Kapoor",
+    name: "Hiren Jurani",
     role: "Product Designer",
     photo: "/team/mira-kapoor.jpg",
     linkedin: "https://www.linkedin.com/",

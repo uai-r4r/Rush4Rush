@@ -97,7 +97,7 @@ export default function Page() {
             </h1>
             <div className="hero-summary">
               <p>
-                21 clubs. 23 events. 1 unforgettable weekend. Plug into the digital rave and
+                21 clubs. 20 events. 1 unforgettable weekend. Plug into the digital rave and
                 experience the most kinetic campus event of the year.
               </p>
             </div>
@@ -131,7 +131,7 @@ export default function Page() {
             <span>Clubs</span>
           </div>
           <div>
-            <strong>23</strong>
+            <strong>20</strong>
             <span>Events</span>
           </div>
           <div>

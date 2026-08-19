@@ -1,6 +1,6 @@
 export type ClubEvent = {
   id: string;
-  club: string;
+  clubs: string[];
   eventName: string;
   tagline: string;
   description: string;
@@ -18,7 +18,7 @@ export type ClubEvent = {
 export const clubEvents: ClubEvent[] = [
   {
     id: "rotaract-traitors",
-    club: "Rotaract",
+    clubs: ["Rotaract"],
     eventName: "Traitors",
     tagline: "Trust no one. Read every move.",
     description:
@@ -32,8 +32,8 @@ export const clubEvents: ClubEvent[] = [
     teamSize: "Teams of 4",
   },
   {
-    id: "sports-side-futsal",
-    club: "Sports Club",
+    id: "sports-futsal",
+    clubs: ["Sports Club"],
     eventName: "Futsal Tournament",
     tagline: "Small pitch. Big energy.",
     description:
@@ -48,7 +48,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "matchbox-project-x",
-    club: "Matchbox",
+    clubs: ["Matchbox"],
     eventName: "Project X",
     tagline: "Make the night legendary.",
     description:
@@ -63,7 +63,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "alumni-business-quiz",
-    club: "Alumni",
+    clubs: ["Alumni"],
     eventName: "Business Quiz",
     tagline: "Know the game behind the game.",
     description:
@@ -78,7 +78,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "arts-uai-got-latent",
-    club: "Arts and Culture",
+    clubs: ["Arts and Culture"],
     eventName: "UAI Got Latent",
     tagline: "The stage is yours to disrupt.",
     description:
@@ -93,7 +93,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "arts-naach-baraati",
-    club: "Arts and Culture",
+    clubs: ["Arts and Culture"],
     eventName: "Naach Baraati Naach",
     tagline: "Dance like the baraat is watching.",
     description:
@@ -108,7 +108,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "elc-campus-roadies",
-    club: "ELC",
+    clubs: ["ELC"],
     eventName: "Campus Roadies",
     tagline: "Courage, chaos, campus.",
     description:
@@ -123,7 +123,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "finx-venture-league",
-    club: "FINX",
+    clubs: ["FINX"],
     eventName: "Venture League",
     tagline: "Pitch big. Think bigger.",
     description:
@@ -138,7 +138,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "uic-boardroom-battle",
-    club: "UIC",
+    clubs: ["UIC"],
     eventName: "Boardroom Battle",
     tagline: "Every decision has a price.",
     description:
@@ -153,7 +153,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "ethics-treasure-hunt",
-    club: "Ethics & CSR",
+    clubs: ["Ethics & CSR"],
     eventName: "Treasure Hunt",
     tagline: "Follow the clues. Find the signal.",
     description:
@@ -167,24 +167,25 @@ export const clubEvents: ClubEvent[] = [
     teamSize: "Teams of 4",
   },
   {
-    // TODO: duplicate event name, confirm with club
-    id: "dramatics-level-up",
-    club: "Dramatics",
+    // Combined event: Dramatics x Techops
+    // TODO: confirm merged slot, venue and category with both clubs
+    id: "dramatics-techops-level-up",
+    clubs: ["Dramatics", "Techops"],
     eventName: "Level Up",
-    tagline: "Improvise beyond the script.",
+    tagline: "Improvise fast. Build faster.",
     description:
-      "A theatre challenge that rewards instinct, presence, and fearless performance. Take the prompt, own the scene, and level up together.",
+      "A joint challenge from Dramatics and Techops where performance meets problem-solving. Take the prompt, think on your feet, and turn a live brief into something that actually works.",
     fee: 0,
     day: 2,
     startTime: "10:00",
-    endTime: "12:00",
+    endTime: "13:00",
     venue: "Black Box Theatre",
     category: "Culture",
     teamSize: "Teams of 4",
   },
   {
     id: "analytica-bidding-wars",
-    club: "Analytica",
+    clubs: ["Analytica"],
     eventName: "Bidding Wars",
     tagline: "Data is power. Budget is survival.",
     description:
@@ -199,7 +200,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "environment-final-truth",
-    club: "Environment",
+    clubs: ["Environment"],
     eventName: "The Final Truth",
     tagline: "Question the story you inherited.",
     description:
@@ -214,7 +215,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "vibe-tribe-sa-re-ga-ma",
-    club: "Vibe Tribe",
+    clubs: ["Vibe Tribe"],
     eventName: "Sa Re Ga Ma of UAI",
     tagline: "Let the campus sing.",
     description:
@@ -228,28 +229,14 @@ export const clubEvents: ClubEvent[] = [
     teamSize: "Solo",
   },
   {
-    id: "vibe-tribe-band-performance",
-    club: "Vibe Tribe",
-    eventName: "Band Performance",
-    tagline: "Turn the volume into a memory.",
-    description:
-      "Live instruments, electric chemistry, and a set made for the crowd. Come for the soundcheck and stay for the full-campus singalong.",
-    fee: 0,
-    day: 2,
-    startTime: "18:00",
-    endTime: "20:00",
-    venue: "Festival Grounds",
-    category: "Culture",
-    teamSize: "Teams of 4",
-  },
-  {
-    // TODO: duplicate event name, confirm with club
-    id: "equinoxxx-object-beats",
-    club: "Equinoxxx",
+    // Combined event: HR x Equinoxxx
+    // TODO: confirm merged slot and venue with both clubs
+    id: "hr-equinoxxx-object-beats",
+    clubs: ["HR", "Equinoxxx"],
     eventName: "Bollywood Object Beats",
     tagline: "Anything can be an instrument.",
     description:
-      "Create rhythm from the everyday in a playful Bollywood-inspired beat battle. Bring your imagination and turn ordinary objects into a performance.",
+      "Create rhythm from the everyday in a playful Bollywood-inspired beat battle. Bring your imagination, your coordination, and turn ordinary objects into a performance.",
     fee: 0,
     day: 2,
     startTime: "14:00",
@@ -259,24 +246,8 @@ export const clubEvents: ClubEvent[] = [
     teamSize: "Teams of 4",
   },
   {
-    // TODO: duplicate event name, confirm with club
-    id: "techops-level-up",
-    club: "Techops",
-    eventName: "Level Up",
-    tagline: "Solve fast. Ship faster.",
-    description:
-      "A practical tech challenge for builders who thrive under a ticking clock. Debug, collaborate, and turn the brief into something that works.",
-    fee: 0,
-    day: 2,
-    startTime: "14:00",
-    endTime: "17:00",
-    venue: "Computer Lab",
-    category: "Tech",
-    teamSize: "Teams of 4",
-  },
-  {
     id: "enactus-go-viral",
-    club: "Enactus",
+    clubs: ["Enactus"],
     eventName: "Go Viral: The Plot Twist",
     tagline: "Make impact impossible to scroll past.",
     description:
@@ -290,24 +261,8 @@ export const clubEvents: ClubEvent[] = [
     teamSize: "Teams of 4",
   },
   {
-    // TODO: duplicate event name, confirm with club
-    id: "hr-object-beats",
-    club: "HR",
-    eventName: "Bollywood Object Beats",
-    tagline: "Recruit the rhythm.",
-    description:
-      "A high-energy team challenge where performance, coordination, and a little Bollywood flair come together. Make your objects sing in sync.",
-    fee: 0,
-    day: 1,
-    startTime: "10:00",
-    endTime: "12:00",
-    venue: "Dance Studio",
-    category: "Culture",
-    teamSize: "Teams of 4",
-  },
-  {
     id: "zalent-icon",
-    club: "Zalent",
+    clubs: ["Zalent"],
     eventName: "Zalent Icon: Battle of the Brand Ambassadors",
     tagline: "Own the brand. Become the icon.",
     description:
@@ -321,8 +276,8 @@ export const clubEvents: ClubEvent[] = [
     teamSize: "Solo",
   },
   {
-    id: "evac-fashion-show-day-1",
-    club: "EVAC",
+    id: "evac-fashion-show",
+    clubs: ["EVAC"],
     eventName: "Fashion Show",
     tagline: "Walk into the future.",
     description:
@@ -337,7 +292,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "robotics-gameforge",
-    club: "Robotics",
+    clubs: ["Robotics"],
     eventName: "GameForge",
     tagline: "Build the fun from scratch.",
     description:
@@ -352,7 +307,7 @@ export const clubEvents: ClubEvent[] = [
   },
   {
     id: "metamorphosis-naach-le-yaar",
-    club: "Metamorphosis",
+    clubs: ["Metamorphosis"],
     eventName: "Naach Le Yaar",
     tagline: "Find the beat in your people.",
     description:

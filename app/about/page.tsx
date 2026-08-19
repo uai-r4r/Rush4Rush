@@ -71,7 +71,7 @@ export default function AboutPage() {
             What is R4R
           </p>
           <p className="about-lead">
-            Rush 4 Rush is the <span>ultimate college festival</span> — 21 clubs, 23 events, one
+            Rush 4 Rush is the <span>ultimate college festival</span> — 21 clubs, 20 events, one
             unforgettable weekend.
           </p>
           <p className="about-body">
@@ -117,14 +117,14 @@ export default function AboutPage() {
               <div className="contact-direct-block">
                 <p className="eyebrow">Prefer to skip the form?</p>
                 <p>
-                  <a href="mailto:r4r@universalai.edu">r4r@universalai.edu</a>
+                  <a href="mailto:r4r@universalai.edu">Rush4Rush@universalai.in</a>
                 </p>
                 <p className="contact-note">For sponsorships, press, and general queries.</p>
               </div>
               <div className="contact-direct-block">
                 <p className="eyebrow">Call the desk</p>
                 <p>
-                  <a href="tel:+912212345678">+91 22 1234 5678</a>
+                  <a href="tel:+912212345678">+91-9665272538 or +91-9116945845</a>
                 </p>
                 <p className="contact-note">Weekdays, 10:00–18:00 IST.</p>
               </div>
