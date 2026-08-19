@@ -2,28 +2,29 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { clubEvents } from "@/data/clubs";
 
 type CampusMap = { id: string; label: string; src: string; alt: string };
 
 const maps: CampusMap[] = [
   {
-    id: "north",
-    label: "North Zone",
-    src: "/map/campus-north.png",
-    alt: "Top-down map of the north festival zone showing the Main Auditorium, Sports Arena, Open Stage, Central Courtyard and Festival Grounds",
+    id: "ground",
+    label: "Ground Floor",
+    src: "/map/ground-floor.png",
+    alt: "Floor plan of the ground floor showing festival venues and facilities",
   },
   {
-    id: "south",
-    label: "South Zone",
-    src: "/map/campus-south.png",
-    alt: "Top-down map of the south academic zone showing the Innovation Lab, Robotics Lab, Computer Lab, Seminar Halls, Media Studio and Executive Hall",
+    id: "first",
+    label: "First Floor",
+    src: "/map/first-floor.png",
+    alt: "Floor plan of the first floor showing festival venues and facilities",
+  },
+  {
+    id: "second",
+    label: "Second Floor",
+    src: "/map/second-floor.png",
+    alt: "Floor plan of the second floor showing festival venues and facilities",
   },
 ];
-
-const venues = Array.from(new Set(clubEvents.map((event) => event.venue))).sort((a, b) =>
-  a.localeCompare(b),
-);
 
 function Lightbox({ map, onClose }: { map: CampusMap; onClose: () => void }) {
   useEffect(() => {
@@ -82,12 +83,12 @@ export default function MapPage() {
             Campus <span>map.</span>
           </h1>
           <p>
-            Lost and in a hurry? Pinch to zoom on mobile, click to enlarge on desktop. Match any
-            event to its building with the venue index below.
+            Lost and in a hurry? Pinch to zoom on mobile, click to enlarge on desktop. Pick a floor
+            to find your event.
           </p>
         </header>
 
-        <div className="map-tabs" role="tablist" aria-label="Campus zones">
+        <div className="map-tabs" role="tablist" aria-label="Campus floors">
           {maps.map((map) => (
             <button
               key={map.id}
@@ -122,24 +123,6 @@ export default function MapPage() {
               ＋ Tap to zoom
             </span>
           </button>
-        </section>
-
-        <section className="venue-index" aria-labelledby="venue-index-title">
-          <div className="section-heading">
-            <p className="eyebrow">Venue index</p>
-            <p className="venue-count">{venues.length} buildings</p>
-          </div>
-          <h2 id="venue-index-title" className="sr-only">
-            List of all festival venues
-          </h2>
-          <ul className="venue-list">
-            {venues.map((venue, index) => (
-              <li key={venue} className="venue-item">
-                <span className="venue-number">{String(index + 1).padStart(2, "0")}</span>
-                <span className="venue-name">{venue}</span>
-              </li>
-            ))}
-          </ul>
         </section>
       </main>
       {zoomed && <Lightbox map={current} onClose={() => setZoomed(false)} />}

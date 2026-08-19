@@ -44,7 +44,7 @@ export const clubEvents: ClubEvent[] = [
     endTime: "13:00",
     venue: "Sports Arena",
     category: "Sports",
-    teamSize: "Teams of 4",
+    teamSize: "Teams of 7",
   },
   {
     id: "matchbox-project-x",
