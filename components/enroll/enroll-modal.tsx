@@ -76,6 +76,7 @@ export function EnrollModal({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<EnrollResponse | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [payerRef, setPayerRef] = useState("");
   // Inline profile completion — see the 409 branch in startEnrollment().
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -205,6 +206,7 @@ export function EnrollModal({
       const form = new FormData();
       form.append("paymentId", result.paymentId);
       form.append("proof", file);
+      if (payerRef.trim()) form.append("payerRef", payerRef.trim());
       await apiUpload("/api/payments/manual", form);
       setStage("done");
     } catch (err) {
@@ -381,6 +383,16 @@ export function EnrollModal({
                 UPI details haven&apos;t been set up yet. Please contact the organisers.
               </p>
             )}
+
+            <label className="auth-field">
+              <span>UPI REFERENCE / UTR (OPTIONAL)</span>
+              <input
+                value={payerRef}
+                onChange={(e) => setPayerRef(e.target.value)}
+                placeholder="12-digit number from your UPI app"
+                inputMode="numeric"
+              />
+            </label>
 
             <label className="auth-field">
               <span>UPLOAD PAYMENT SCREENSHOT</span>

@@ -30,6 +30,13 @@ export async function POST(req: Request) {
     const form = await req.formData();
     const paymentId = String(form.get("paymentId") ?? "");
     const file = form.get("proof");
+    /**
+     * Optional UTR typed by the payer. Unverified — anyone can type anything —
+     * so it is a matching hint, never proof. But it turns a club admin's job
+     * from squinting at a screenshot into searching a number, and it is what
+     * reconciles against a bank statement later.
+     */
+    const payerRef = String(form.get("payerRef") ?? "").trim().slice(0, 40) || null;
 
     if (!/^[0-9a-f-]{36}$/i.test(paymentId)) {
       throw Object.assign(new Error("Invalid payment reference"), { status: 400 });
@@ -79,7 +86,12 @@ export async function POST(req: Request) {
 
     await admin
       .from("payments")
-      .update({ proof_path: path, status: "pending_review", method: "manual_upi" })
+      .update({
+        proof_path: path,
+        payer_ref: payerRef,
+        status: "pending_review",
+        method: "manual_upi",
+      })
       .eq("id", paymentId);
 
     return ok({ status: "pending_review" });
