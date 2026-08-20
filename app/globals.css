@@ -1690,6 +1690,7 @@ body.menu-open {
   .lookup-row .button {
     width: 100%;
     min-height: 52px;
+    min-width: 0;
   }
 
   .page-art {
@@ -2296,6 +2297,9 @@ body:has([role="dialog"]) .role-switcher {
   background: var(--background);
   min-height: 100svh;
   padding: 6.5rem 1rem 2rem;
+  max-width: 900px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
 }
 .scanner-header {
   align-items: start;
@@ -2701,6 +2705,9 @@ body:has([role="dialog"]) .role-switcher {
   .dashboard-toolbar input,
   .dashboard-toolbar select {
     width: 100%;
+  }
+  .scanner-shell {
+    padding-inline: 1rem;
   }
 }
 .role-switcher {
@@ -3151,14 +3158,19 @@ body:has([role="dialog"]) .role-switcher {
 .scanner-lookup {
   display: grid;
   gap: 12px;
-  max-width: 560px;
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  padding-inline: 1rem;
 }
 .lookup-row {
   display: flex;
-  gap: 8px;
+  gap: 0.75rem;
+  width: 100%;
 }
 .lookup-row input {
   flex: 1;
+  min-width: 0;
 }
 .lookup-result {
   display: flex;
@@ -3236,6 +3248,9 @@ body:has([role="dialog"]) .role-switcher {
   display: grid;
   gap: 10px;
   justify-items: center;
+  max-width: 640px;
+  margin-inline: auto;
+  width: 100%;
 }
 .qr-reader {
   max-width: 560px;
