@@ -124,7 +124,7 @@ export default function AboutPage() {
               <div className="contact-direct-block">
                 <p className="eyebrow">Call the desk</p>
                 <p>
-                  <a href="tel:+912212345678">+91-9665272538 or +91-9116945845</a>
+                  <a href="tel:+912212345678">+91-9753021665 or +91-9823294222</a>
                 </p>
                 <p className="contact-note">Weekdays, 10:00–18:00 IST.</p>
               </div>
