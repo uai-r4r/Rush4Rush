@@ -31,7 +31,25 @@ export async function POST(req: Request) {
 
   let event: {
     event: string;
-    payload?: { payment?: { entity?: { id?: string; order_id?: string } } };
+    payload?: {
+      payment?: {
+        entity?: {
+          id?: string;
+          order_id?: string;
+          /**
+           * The bank reference. `rrn` is the UTR the payer sees in their UPI
+           * app and on their statement — the number they will quote at a desk.
+           * It arrives ONLY here, never in the browser callback, which is a
+           * second reason the webhook matters beyond closed-tab payments.
+           */
+          acquirer_data?: {
+            rrn?: string;
+            upi_transaction_id?: string;
+            bank_transaction_id?: string;
+          };
+        };
+      };
+    };
   };
   try {
     event = JSON.parse(raw);
@@ -42,6 +60,13 @@ export async function POST(req: Request) {
   const entity = event.payload?.payment?.entity;
   const orderId = entity?.order_id;
   const paymentId = entity?.id;
+
+  // UPI reports `rrn`, netbanking `bank_transaction_id`; take whichever came.
+  const acquirerRef =
+    entity?.acquirer_data?.rrn ??
+    entity?.acquirer_data?.upi_transaction_id ??
+    entity?.acquirer_data?.bank_transaction_id ??
+    null;
 
   if (!orderId) return new Response("ok", { status: 200 });
 
@@ -65,6 +90,7 @@ export async function POST(req: Request) {
     await admin.rpc("confirm_payment", {
       p_payment_id: payment.id,
       p_razorpay_payment_id: paymentId ?? null,
+      p_acquirer_ref: acquirerRef,
     });
   } else if (event.event === "payment.failed" && payment.status !== "paid") {
     await admin.from("payments").update({ status: "failed" }).eq("id", payment.id);
@@ -74,7 +100,7 @@ export async function POST(req: Request) {
     action: `webhook.${event.event}`,
     entity: "payment",
     entity_id: payment.id,
-    detail: { orderId, paymentId },
+    detail: { orderId, paymentId, acquirerRef },
   });
 
   return new Response("ok", { status: 200 });

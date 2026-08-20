@@ -25,16 +25,13 @@ export async function POST(req: Request) {
     const path = body.path === "uai" ? "uai" : "guest";
     const ip = clientIp(req);
 
-    // ── Cheap, local validation FIRST ────────────────────────────────────────
-    // The domain check is pure string logic and needs nothing external, so it
-    // runs before the rate limiter. Two reasons that ordering matters:
-    //   1. A typo'd email fails with a useful message instead of a generic 503
-    //      whenever the database is briefly unreachable.
-    //   2. Picking the wrong path shouldn't consume one of the user's 3 sends
-    //      per hour — they'd be locked out by their own mistake.
-    //
-    // The domain check IS the entire UAI verification: owning an address at the
-    // college domain is being a student. No ID upload, no manual review.
+    // Rate limit BEFORE sending. Per-email stops inbox spam, per-IP stops one
+    // script cycling through addresses to burn the daily quota.
+    await consume(`otp:send:email:${email}`, LIMITS.otpSendPerEmail);
+    await consume(`otp:send:ip:${ip}`, LIMITS.otpSendPerIp);
+
+    // The domain check is the entire UAI verification. Owning an address at
+    // the college domain IS being a student — no ID upload, no manual review.
     const isUaiEmail = email.endsWith(UAI_DOMAIN);
 
     if (path === "uai" && !isUaiEmail) {
@@ -60,12 +57,6 @@ export async function POST(req: Request) {
         ),
       );
     }
-
-    // ── Then the expensive checks ────────────────────────────────────────────
-    // Per-email stops inbox spam, per-IP stops one script cycling through
-    // addresses to burn the daily email quota.
-    await consume(`otp:send:email:${email}`, LIMITS.otpSendPerEmail);
-    await consume(`otp:send:ip:${ip}`, LIMITS.otpSendPerIp);
 
     // Clear any brute-force lock left over from a previous session.
     const admin = createAdminClient();
