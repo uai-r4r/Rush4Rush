@@ -29,13 +29,38 @@ export function Navbar() {
   const [menu, setMenu] = useState(false);
   const pathname = usePathname();
   const { openAuth, user, logout, role } = useAuth();
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Lock background scroll while the mobile menu is open
+  useEffect(() => {
+    document.body.classList.toggle("menu-open", open);
+    return () => document.body.classList.remove("menu-open");
+  }, [open]);
+
+  // Close the mobile menu and account dropdown on navigation
+  useEffect(() => {
+    setOpen(false);
+    setMenu(false);
+  }, [pathname]);
+
+  // Close the mobile menu on Escape
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   const allLinks = [...links, ...roleLinks(role)];
+
   return (
     <>
       <header className={`site-nav ${scrolled ? "site-nav-scrolled" : ""}`}>
@@ -71,22 +96,34 @@ export function Navbar() {
           <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
           <span aria-hidden="true">{open ? "×" : "///"}</span>
         </button>
-        <div id="mobile-menu" className={`mobile-menu ${open ? "mobile-menu-open" : ""}`}>
-          {allLinks.map((link) => (
-            <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>
-              {link.label}
-            </Link>
-          ))}
-          <div className="mobile-auth">
-            <AuthActions
-              user={user}
-              onAuth={openAuth}
-              onMenu={() => setMenu(!menu)}
-              onLogout={logout}
-            />
-          </div>
-        </div>
       </header>
+      <div id="mobile-menu" className={`mobile-menu ${open ? "mobile-menu-open" : ""}`}>
+        {allLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={pathname === link.href ? "active" : undefined}
+            aria-current={pathname === link.href ? "page" : undefined}
+            onClick={() => setOpen(false)}
+          >
+            {link.label}
+          </Link>
+        ))}
+        <div className="mobile-auth">
+          <AuthActions
+            user={user}
+            onAuth={(mode) => {
+              setOpen(false);
+              openAuth(mode);
+            }}
+            onMenu={() => setMenu(!menu)}
+            onLogout={() => {
+              setOpen(false);
+              logout();
+            }}
+          />
+        </div>
+      </div>
       {user && menu && (
         <div className="user-menu">
           <strong>{user.name}</strong>
@@ -115,6 +152,7 @@ export function Navbar() {
     </>
   );
 }
+
 function AuthActions({
   user,
   onAuth,
@@ -149,8 +187,6 @@ function AuthActions({
   );
 }
 
-const UAI_INSTAGRAM = "https://www.instagram.com/universalaiuniversity/";
-
 const policyLinks = [
   { label: "Terms", href: "/terms" },
   { label: "Privacy", href: "/privacy" },
@@ -168,7 +204,11 @@ export function Footer() {
         </p>
       </div>
       <div className="footer-links">
-        <a href="https://www.instagram.com/official.rush4rush?igsh=Nm4zcjZ1Y2VsbnFm" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://www.instagram.com/official.rush4rush?igsh=Nm4zcjZ1Y2VsbnFm"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Instagram
         </a>
         {policyLinks.map((link) => (
@@ -181,5 +221,6 @@ export function Footer() {
     </footer>
   );
 }
+
 export { Footer as SiteFooter };
 export default Navbar;

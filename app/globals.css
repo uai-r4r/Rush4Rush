@@ -81,7 +81,7 @@ button {
   transition:
     background 0.3s ease,
     padding 0.3s ease;
-  z-index: 20;
+  z-index: 300;
 }
 .site-nav-scrolled {
   background: rgba(4, 5, 13, 0.88);
@@ -1071,21 +1071,6 @@ button {
     font-family: "Space Mono", monospace;
     font-size: 1rem;
   }
-  .mobile-menu {
-    background: rgba(4, 5, 13, 0.98);
-    display: flex;
-    flex-direction: column;
-    gap: 1.7rem;
-    inset: 0;
-    padding: 8rem 1.5rem 2rem;
-    position: fixed;
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    z-index: -1;
-  }
-  .mobile-menu-open {
-    transform: translateX(0);
-  }
   .hero-section {
     align-items: flex-start;
     min-height: 800px;
@@ -1391,17 +1376,39 @@ button {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+body.menu-open {
+  overflow: hidden;
+}
+
 @media (max-width: 700px) {
-  .map-main {
-    padding-top: 8rem;
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    background: var(--background);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    overflow-y: auto;
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .map-header h1 {
-    font-size: clamp(3.5rem, 16vw, 6rem);
+
+  .mobile-menu-open {
+    transform: translateX(0);
+    visibility: visible;
   }
-  .venue-list {
-    grid-template-columns: 1fr;
+
+  .menu-toggle {
+    position: relative;
+    z-index: 201;
   }
 }
+
 /* ---- /about ---- */
 .about-main {
   margin: 0 auto;
@@ -1645,10 +1652,42 @@ button {
     padding-top: 8rem;
   }
   .about-header h1 {
-    font-size: clamp(3.5rem, 16vw, 6rem);
+    font-size: clamp(2.5rem, 12vw, 4rem);
   }
   .team-grid {
     grid-template-columns: 1fr;
+  }
+
+  .scanner-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    position: static;
+  }
+  .scanner-header > * {
+    position: static;
+    margin: 0;
+  }
+  .scanner-header h1 {
+    font-size: clamp(2.25rem, 11vw, 3.5rem);
+    line-height: 1;
+  }
+
+  .lookup-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  .lookup-row input,
+  .lookup-row .button {
+    width: 100%;
+    min-height: 52px;
+  }
+
+  .page-art {
+    display: none;
   }
 }
 /* ---- merch UG/PG toggle ---- */
@@ -2885,19 +2924,22 @@ body:has([role="dialog"]) .role-switcher {
   }
   .pass-card {
     grid-template-columns: 1fr;
+    gap: 2rem;
   }
   .pass-card-main {
     min-height: 250px;
     padding: 1.25rem;
+    position: relative;
   }
   .pass-card-main::after {
     border-bottom: 1px dashed var(--muted);
     border-right: 0;
     height: 0;
     right: 0;
-    top: auto;
-    bottom: 230px;
+    top: 100%;
+    bottom: auto;
     width: 100%;
+    transform: translateY(1rem);
   }
   .pass-qr {
     min-height: 250px;
