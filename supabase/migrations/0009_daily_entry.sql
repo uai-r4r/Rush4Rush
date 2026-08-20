@@ -1,0 +1,19 @@
+-- R4R 2026 — the entry pass must work on both days
+--
+-- check_in_registration() allowed exactly one scan ever. Correct for a club
+-- event — that is what stops a forwarded screenshot getting five people in.
+-- Wrong for the festival gate pass, which someone needs on day one AND day
+-- two. As written, everybody would have been turned away on the second
+-- morning holding a pass they had legitimately paid for.
+--
+-- Rule now:
+--   entry pass  → once per calendar day (re-entry on day 2 is fine)
+--   club event  → once, ever
+--
+-- Safe to re-run.
+
+-- ---------------------------------------------------------------------------
+-- Full check-in log. registrations.checked_in_at keeps the FIRST entry (the
+-- dashboard reads it); this table records every scan, which is also the audit
+-- trail if there is ever a dispute about who let whom in.
+-- ---------------------------------------------------------------------------
