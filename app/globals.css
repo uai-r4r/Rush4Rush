@@ -458,7 +458,7 @@ button {
   justify-content: center;
   padding: 1.25rem;
   position: fixed;
-  z-index: 50;
+  z-index: 400;
 }
 .merch-modal {
   background: var(--elevated);
@@ -466,7 +466,9 @@ button {
   box-shadow: 0 0 50px rgba(255, 20, 152, 0.3);
   display: grid;
   grid-template-columns: 1fr 1fr;
+  max-height: 90dvh;
   max-width: 800px;
+  overscroll-behavior: contain;
   position: relative;
   width: 100%;
 }
@@ -705,16 +707,17 @@ button {
   justify-content: center;
   padding: 1rem;
   position: fixed;
-  z-index: 60;
+  z-index: 410;
 }
 .event-modal {
   background: var(--elevated);
   border: 1px solid var(--primary);
   border-radius: 22px;
   box-shadow: 0 0 60px rgba(255, 20, 152, 0.25);
-  max-height: 90vh;
+  max-height: 90dvh;
   max-width: 760px;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: clamp(2rem, 5vw, 4rem);
   position: relative;
   width: 100%;
@@ -1137,8 +1140,9 @@ button {
   }
   .merch-modal {
     grid-template-columns: 1fr;
-    max-height: 90vh;
+    max-height: 90dvh;
     overflow: auto;
+    overscroll-behavior: contain;
   }
   .modal-image {
     min-height: 240px;
@@ -1188,6 +1192,8 @@ button {
     grid-template-columns: 1fr;
   }
   .event-modal {
+    max-height: 90dvh;
+    overscroll-behavior: contain;
     padding: 2rem 1.25rem;
   }
 }
@@ -1311,7 +1317,7 @@ button {
   justify-content: center;
   padding: clamp(1rem, 4vw, 3rem);
   position: fixed;
-  z-index: 60;
+  z-index: 410;
 }
 .map-lightbox-hint {
   color: var(--muted);
@@ -1871,7 +1877,7 @@ body.menu-open {
   overflow: auto;
   padding: 1rem;
   position: fixed;
-  z-index: 70;
+  z-index: 420;
 }
 .auth-modal {
   background: linear-gradient(
@@ -1880,7 +1886,9 @@ body.menu-open {
     var(--cyan) 45%,
     var(--violet)
   );
+  max-height: 90dvh;
   max-width: 560px;
+  overscroll-behavior: contain;
   padding: 1px;
   position: relative;
   width: 100%;
@@ -2029,6 +2037,7 @@ body.menu-open {
   .auth-backdrop {
     align-items: flex-start;
     padding: 5rem 1rem 1rem;
+    z-index: 420;
   }
   .audience-grid {
     grid-template-columns: 1fr;
@@ -2039,7 +2048,9 @@ body.menu-open {
 }
 .auth-modal {
   border-radius: 16px;
+  max-height: 90dvh;
   overflow: hidden;
+  overscroll-behavior: contain;
 }
 .auth-panel {
   border-radius: 16px;
@@ -2441,7 +2452,7 @@ body:has([role="dialog"]) .role-switcher {
   padding: 2rem;
   position: fixed;
   text-align: center;
-  z-index: 100;
+  z-index: 440;
 }
 .scan-result-valid {
   background: #00d26a;
@@ -2634,7 +2645,7 @@ body:has([role="dialog"]) .role-switcher {
   justify-content: center;
   padding: 1rem;
   position: fixed;
-  z-index: 90;
+  z-index: 430;
 }
 .proof-modal {
   background: var(--elevated);
