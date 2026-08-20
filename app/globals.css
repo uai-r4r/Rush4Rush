@@ -1778,7 +1778,7 @@ body.menu-open {
   color: transparent;
 }
 .page-art[data-word="EVENTS"] {
-  font-size: clamp(5.5rem, 22vw, 18rem);
+  font-size: clamp(6rem, 26vw, 20rem);
 }
 .page-art[data-word="SCHEDULE"] {
   font-size: clamp(4.5rem, 17vw, 15rem);
