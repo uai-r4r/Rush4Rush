@@ -25,6 +25,43 @@ export async function POST(req: Request) {
     const path = body.path === "uai" ? "uai" : "guest";
     const ip = clientIp(req);
 
+    const admin = createAdminClient();
+
+    /**
+     * Early-access gate. Checked BEFORE the rate limiter so a blocked address
+     * gets a clear message and does not silently burn someone's quota.
+     *
+     * Gates the code request only — the site stays public, so Razorpay's
+     * reviewers can still browse events, checkout and the policy pages.
+     * Existing staff are never blocked, whatever the flag says.
+     */
+    const { data: canRequest, error: gateError } = await admin.rpc(
+      "can_request_otp",
+      { target_email: email },
+    );
+
+    if (gateError) {
+      console.error("[otp:send] gate", gateError.message);
+      return handleError(
+        Object.assign(new Error("Could not send the code. Please try again."), {
+          status: 502,
+        }),
+      );
+    }
+
+    // Refuse on anything that isn't an explicit true. A null from a failed RPC
+    // must not read as permission — that is the fail-open shape again.
+    if (canRequest !== true) {
+      return handleError(
+        Object.assign(
+          new Error(
+            "Registration isn't open yet. Follow @rush4rush for the launch date.",
+          ),
+          { status: 403 },
+        ),
+      );
+    }
+
     // Rate limit BEFORE sending. Per-email stops inbox spam, per-IP stops one
     // script cycling through addresses to burn the daily quota.
     await consume(`otp:send:email:${email}`, LIMITS.otpSendPerEmail);
@@ -59,7 +96,6 @@ export async function POST(req: Request) {
     }
 
     // Clear any brute-force lock left over from a previous session.
-    const admin = createAdminClient();
     await admin.from("otp_attempts").upsert({
       email,
       fail_count: 0,
