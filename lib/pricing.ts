@@ -98,24 +98,25 @@ export async function quote(params: {
     .single();
 
   /**
-   * Organisers are comped the entry pass too — they are working the festival,
-   * not attending it. The pass is still ISSUED at ₹0 rather than skipped, so
+   * ONLY super admins are comped the pass. Club admins and volunteers pay it
+   * like everyone else — they are students attending the festival, and the
+   * food and DJ night cost the same to provide whoever eats them.
+   *
+   * The pass is still ISSUED at ₹0 for a super admin rather than skipped, so
    * they get a gate ticket and a QR like everyone else and the scanner needs
    * no special case for staff.
+   *
+   * This rule is duplicated in entryPassQuote() below. If you change who is
+   * comped, change it in BOTH — a mismatch means someone is comped at signup
+   * and charged at enrol, or the reverse.
    */
-  const { data: isOrganiser } = await admin
-    .from("club_admins")
-    .select("club_id")
-    .eq("user_id", params.userId)
-    .limit(1);
-
   const { data: profile } = await admin
     .from("profiles")
     .select("role")
     .eq("id", params.userId)
     .single();
 
-  const comped = Boolean(isOrganiser?.length) || profile?.role === "super_admin";
+  const comped = profile?.role === "super_admin";
 
   const needsEntryPass = !existingPass;
   const entryPassInr = comped
@@ -152,4 +153,56 @@ export async function quote(params: {
     (needsEntryPass ? entryPassInr : 0);
 
   return { items, needsEntryPass, entryPassInr, totalInr };
+}
+
+/**
+ * What the entry pass costs THIS person, with no club event attached.
+ *
+ * quote() deliberately refuses an empty event list — enrolling in nothing is a
+ * bug there. But the signup pass step buys the pass on its own, so it needs
+ * the same pricing rules without that guard.
+ *
+ * Comp rule: super admin only. Club admins and volunteers pay the pass. Note
+ * this is SEPARATE from the per-event organiser comp in quote(), which still
+ * gives a club admin their own club's events free — not paying to run your own
+ * event is a different question from paying to attend the festival.
+ */
+export async function entryPassQuote(params: {
+  userId: string;
+  isUai: boolean;
+}): Promise<{ alreadyHeld: boolean; amountInr: number; comped: boolean }> {
+  const admin = createAdminClient();
+
+  const { data: existingPass } = await admin
+    .from("registrations")
+    .select("id")
+    .eq("user_id", params.userId)
+    .eq("event_id", ENTRY_PASS_EVENT_ID)
+    .eq("status", "confirmed")
+    .maybeSingle();
+
+  const { data: settings } = await admin
+    .from("settings")
+    .select("entry_fee_uai_inr, entry_fee_guest_inr")
+    .eq("id", true)
+    .single();
+
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("id", params.userId)
+    .single();
+
+  // Super admin only. See the matching note in quote() above.
+  const comped = profile?.role === "super_admin";
+
+  return {
+    alreadyHeld: Boolean(existingPass),
+    comped,
+    amountInr: comped
+      ? 0
+      : params.isUai
+        ? (settings?.entry_fee_uai_inr ?? 50)
+        : (settings?.entry_fee_guest_inr ?? 100),
+  };
 }

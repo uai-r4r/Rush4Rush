@@ -4,21 +4,24 @@ import { useState } from "react";
 import { StepChoosePath } from "./step-choose-path";
 import { StepVerify } from "./step-verify";
 import { StepAccountDetails } from "./step-account-details";
+import { StepPass } from "./step-pass";
 import { StepTicket } from "./step-ticket";
 
 type Mode = "register" | "login";
-type Step = "audience" | "verify" | "details" | "done";
+type Step = "audience" | "verify" | "details" | "pass" | "done";
 type RegistrationIntent = import("../auth-provider").EnrollmentIntent;
 
 /**
- * Registration is now account creation only: choose path → verify email →
- * details → done.
+ * Registration: choose path → verify email → details → festival pass → done.
  *
- * The payment step is gone from here on purpose. Money is collected at ENROL
- * time via /api/registrations, which works out the entry pass automatically
- * (₹100 for guests, ₹0 for UAI students, skipped entirely if they already have
- * one). Charging during signup would mean guessing what they'll enrol in
- * before they've picked anything.
+ * The pass is charged here rather than at first enrolment, so people know the
+ * real cost of attending before they start picking events.
+ *
+ * The pass step is SKIPPABLE, and that matters. /api/registrations still adds
+ * the pass to a first enrolment when it is missing, so someone who abandons or
+ * fails payment here is not stranded — they have an account and pay later,
+ * exactly as before. Making it mandatory would turn a payment hiccup into a
+ * dead end with no way into the site.
  */
 export function RegisterFlow({
   firstRef,
@@ -41,12 +44,12 @@ export function RegisterFlow({
   const [year, setYear] = useState("");
   const [error, setError] = useState("");
 
-  const stepNumber = { audience: 1, verify: 2, details: 3, done: 4 }[step];
+  const stepNumber = { audience: 1, verify: 2, details: 3, pass: 4, done: 5 }[step];
   const title = step === "done" ? "YOU ARE IN" : "JOIN THE RUSH";
 
   return (
     <>
-      <p className="eyebrow auth-eyebrow">R4R // 2026 · STEP {stepNumber} OF 3</p>
+      <p className="eyebrow auth-eyebrow">R4R // 2026 · STEP {stepNumber} OF 4</p>
       <h2 id="auth-title">{title}</h2>
       <p className="auth-subtitle">One weekend. Every version of you.</p>
 
@@ -73,8 +76,9 @@ export function RegisterFlow({
           setError={setError}
           onBack={() => setStep("audience")}
           // Someone who already finished registering skips the details step —
-          // they just logged in.
-          onVerified={(needsDetails) => setStep(needsDetails ? "details" : "done")}
+          // they just logged in. They still pass through the pass step, which
+          // skips ITSELF if the server says they already hold one.
+          onVerified={(needsDetails) => setStep(needsDetails ? "details" : "pass")}
         />
       )}
 
@@ -93,8 +97,12 @@ export function RegisterFlow({
           setYear={setYear}
           error={error}
           setError={setError}
-          onNext={() => setStep("done")}
+          onNext={() => setStep("pass")}
         />
+      )}
+
+      {step === "pass" && (
+        <StepPass firstRef={firstRef} onDone={() => setStep("done")} />
       )}
 
       {step === "done" && (
