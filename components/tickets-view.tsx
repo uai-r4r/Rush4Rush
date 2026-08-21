@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import type { Ticket, TicketStatus } from "@/lib/ticket-data";
+import { TeamPanel } from "@/components/enroll/team-panel";
+import { JoinTeam } from "@/components/enroll/join-team";
 
 /**
  * Renders real tickets. Markup and class names are unchanged from the v0 mock,
@@ -34,6 +36,7 @@ function PassCard({ ticket }: { ticket: Ticket }) {
           <span>{ticket.venue}</span>
         </div>
         <p className="pass-reference">{ticket.registrationId.slice(0, 8).toUpperCase()}</p>
+        {ticket.team && <TeamPanel team={ticket.team} eventName={ticket.eventName} />}
       </div>
 
       {ticket.token ? (
@@ -72,6 +75,20 @@ export function TicketsView({ name, tickets }: { name: string; tickets: Ticket[]
         </h1>
         <p className="gated-copy">Welcome, {name}. Keep this screen ready at the gate.</p>
       </header>
+
+      {/*
+        Joining by code lives here because that is where someone lands when a
+        friend tells them "register and put in this code" — and it is where
+        the resulting ticket appears a second later.
+      */}
+      <section className="join-team-block" aria-label="Join a team">
+        <span className="ticket-label">GOT A TEAM CODE?</span>
+        <p className="team-panel-hint">
+          Enter it below to take a place your leader already paid for. You need your festival
+          entry pass first.
+        </p>
+        <JoinTeam />
+      </section>
 
       {tickets.length ? (
         <section className="passes-list" aria-label="Your passes">

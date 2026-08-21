@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { apiPost, apiUpload } from "@/lib/api-client";
+import { apiGet, apiPost, apiUpload } from "@/lib/api-client";
 import { CustomListbox } from "@/components/custom-listbox";
 import type { EnrollmentIntent } from "@/components/auth-provider";
 
@@ -24,6 +24,8 @@ import type { EnrollmentIntent } from "@/components/auth-provider";
  * with no code change.
  */
 
+type TeamInfo = { teamId: string; code: string; capacity: number };
+
 type Quote = {
   items: { eventId: string; eventName: string; clubId: string; feeInr: number }[];
   needsEntryPass: boolean;
@@ -32,17 +34,19 @@ type Quote = {
 };
 
 type EnrollResponse =
-  | { status: "confirmed"; paymentId: string; quote: Quote }
+  | { status: "confirmed"; paymentId: string; quote: Quote; teams?: Record<string, TeamInfo> }
   | {
       status: "razorpay";
       paymentId: string;
       quote: Quote;
+      teams?: Record<string, TeamInfo>;
       order: { id: string; amount: number; currency: string; keyId?: string };
     }
   | {
       status: "manual_upi";
       paymentId: string;
       quote: Quote;
+      teams?: Record<string, TeamInfo>;
       upi: { id: string | null; payeeName: string | null; amountInr: number; note: string };
     };
 
@@ -77,6 +81,15 @@ export function EnrollModal({
   const [result, setResult] = useState<EnrollResponse | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [payerRef, setPayerRef] = useState("");
+  // Defaults to the event's minimum, so a 2..4 event opens on 2 rather than
+  // making the leader think about it.
+  const [teamSize, setTeamSize] = useState(Math.max(1, intent.minTeamSize ?? 1));
+  /**
+   * Per-size prices, fetched rather than derived. A club can charge Rs.200 for
+   * a pair and Rs.350 for a trio without that being a per-head multiple, so
+   * the only correct source is team_fee() on the server.
+   */
+  const [teamPrices, setTeamPrices] = useState<Record<number, number> | null>(null);
   // Inline profile completion — see the 409 branch in startEnrollment().
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -93,12 +106,42 @@ export function EnrollModal({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  /**
+   * Load the price of each size up front. Solo events skip it — there is
+   * nothing to choose between.
+   *
+   * On failure the buttons fall back to bare numbers rather than blocking
+   * enrolment: the server prices the checkout regardless, so a missing label
+   * costs clarity, not correctness.
+   */
+  useEffect(() => {
+    if ((intent.maxTeamSize ?? 1) <= 1) return;
+    let alive = true;
+    apiGet<{ sizes: { size: number; feeInr: number }[] }>(
+      `/api/events/${encodeURIComponent(intent.eventId)}/team-pricing`,
+    )
+      .then((data) => {
+        if (!alive) return;
+        setTeamPrices(
+          Object.fromEntries(data.sizes.map((s) => [s.size, s.feeInr])),
+        );
+      })
+      .catch(() => {
+        if (alive) setTeamPrices(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [intent.eventId, intent.maxTeamSize]);
+
   async function startEnrollment() {
     setStage("working");
     setError(null);
     try {
+      const isTeam = (intent.maxTeamSize ?? 1) > 1;
       const data = await apiPost<EnrollResponse>("/api/registrations", {
         eventIds: [intent.eventId],
+        ...(isTeam ? { teamSizes: { [intent.eventId]: teamSize } } : {}),
       });
       setResult(data);
 
@@ -240,10 +283,51 @@ export function EnrollModal({
           <>
             <p className="eyebrow">Enrolment // confirm</p>
             <h2 id="enroll-title">{intent.eventName}</h2>
-            <p className="auth-hint">
-              Confirm below and we&apos;ll work out your total — including the festival entry pass
-              if you still need one.
-            </p>
+            {(intent.maxTeamSize ?? 1) > 1 ? (
+              <>
+                <p className="auth-hint">
+                  This is a team event. Pick how many you&apos;re paying for — you&apos;ll get a
+                  code to share, and it admits exactly that many.
+                </p>
+                <label className="auth-field">
+                  <span>TEAM SIZE</span>
+                  <div className="team-size-picker">
+                    {Array.from(
+                      { length: (intent.maxTeamSize ?? 1) - (intent.minTeamSize ?? 1) + 1 },
+                      (_, i) => (intent.minTeamSize ?? 1) + i,
+                    ).map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        className={teamSize === n ? "is-active" : ""}
+                        onClick={() => setTeamSize(n)}
+                        aria-pressed={teamSize === n}
+                      >
+                        <span className="team-size-n">{n}</span>
+                        {teamPrices?.[n] != null && (
+                          <span className="team-size-fee">Rs.{teamPrices[n]}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </label>
+                {teamPrices?.[teamSize] != null && (
+                  <p className="team-size-total">
+                    Team of {teamSize} — <strong>Rs.{teamPrices[teamSize]}</strong>
+                    <span> · entry passes charged separately at checkout</span>
+                  </p>
+                )}
+                <p className="auth-hint">
+                  Need another place later? Your leader can add one from the ticket and pay the
+                  difference.
+                </p>
+              </>
+            ) : (
+              <p className="auth-hint">
+                Confirm below and we&apos;ll work out your total — including the festival entry
+                pass if you still need one.
+              </p>
+            )}
             <button className="button button-primary" type="button" onClick={startEnrollment}>
               CONTINUE
             </button>
@@ -320,6 +404,18 @@ export function EnrollModal({
               You&apos;re registered for {intent.eventName}. Your ticket is under My Tickets — if
               there&apos;s no QR on it yet, an organiser is still confirming your payment.
             </p>
+            {result?.teams?.[intent.eventId] && (
+              <div className="team-code-display">
+                <span className="ticket-label">TEAM CODE</span>
+                <strong className="team-code-value">
+                  {result.teams[intent.eventId].code}
+                </strong>
+                <p className="auth-hint">
+                  Share this with your team — it admits{" "}
+                  {result.teams[intent.eventId].capacity - 1} more.
+                </p>
+              </div>
+            )}
             <a className="button button-primary" href="/tickets">
               VIEW MY TICKETS
             </a>
@@ -431,6 +527,18 @@ export function EnrollModal({
                 ? "We've got your screenshot. Once an organiser verifies it, your ticket and QR appear under My Tickets."
                 : `You're registered for ${intent.eventName}. Your ticket and QR are ready.`}
             </p>
+            {result?.teams?.[intent.eventId] && (
+              <div className="team-code-display">
+                <span className="ticket-label">TEAM CODE</span>
+                <strong className="team-code-value">
+                  {result.teams[intent.eventId].code}
+                </strong>
+                <p className="auth-hint">
+                  Share this with your team — it admits{" "}
+                  {result.teams[intent.eventId].capacity - 1} more.
+                </p>
+              </div>
+            )}
             <a className="button button-primary" href="/tickets">
               VIEW MY TICKETS
             </a>

@@ -25,6 +25,9 @@ export type EnrollmentIntent = {
   eventName: string;
   fee: number;
   source: "event" | "hero";
+  /** >1 means the enrol modal offers a team size picker. Defaults to solo. */
+  minTeamSize?: number;
+  maxTeamSize?: number;
 };
 
 type AuthContextValue = {
