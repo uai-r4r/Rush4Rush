@@ -17,8 +17,22 @@ import { createTicketToken } from "@/lib/tickets";
 
 export type TicketStatus = "paid" | "pending" | "checked-in";
 
+export type TeamInfo = {
+  id: string;
+  code: string;
+  /** Only the leader may grow the team — they are the one who paid. */
+  isLeader: boolean;
+  /** Confirmed members so far, including the leader. */
+  members: number;
+  /** How many were PAID for. The code stops working at exactly this many. */
+  capacity: number;
+  /** The event's ceiling — the most the leader could ever grow to. */
+  maxTeamSize: number;
+};
+
 export type Ticket = {
   registrationId: string;
+  eventId: string;
   eventName: string;
   clubName: string;
   day: string;
@@ -29,6 +43,8 @@ export type Ticket = {
   isEntryPass: boolean;
   /** null unless the registration is confirmed — never render a QR without it */
   token: string | null;
+  /** null for solo events and the entry pass */
+  team: TeamInfo | null;
 };
 
 function formatTime(start: string | null, end: string | null) {
@@ -46,7 +62,7 @@ export async function getTicketsForUser(userId: string): Promise<Ticket[]> {
       // there are TWO paths from events to clubs (the owning-club foreign key
       // and the collab join table), and PostgREST refuses to guess. This picks
       // the owning club, which is what a ticket should show.
-      "id, status, checked_in_at, created_at, events(id, name, day, start_time, end_time, venue, is_entry_pass, clubs!events_club_id_fkey(name)), payments(status, amount_inr)",
+      "id, status, checked_in_at, created_at, team_id, events(id, name, day, start_time, end_time, venue, is_entry_pass, max_team_size, clubs!events_club_id_fkey(name)), teams(id, code, leader_id, capacity), payments(status, amount_inr)",
     )
     .eq("user_id", userId)
     .neq("status", "cancelled")
@@ -54,9 +70,34 @@ export async function getTicketsForUser(userId: string): Promise<Ticket[]> {
 
   if (error) throw error;
 
+  /**
+   * How many people are actually in each of this user's teams. Counted in one
+   * query rather than per ticket — someone in four team events would otherwise
+   * cost four round trips on a page that has to be fast at the gate.
+   */
+  const teamIds = (data ?? [])
+    .map((row) => (row as { team_id: string | null }).team_id)
+    .filter((id): id is string => Boolean(id));
+
+  const memberCounts = new Map<string, number>();
+  if (teamIds.length) {
+    const { data: members } = await admin
+      .from("registrations")
+      .select("team_id")
+      .in("team_id", [...new Set(teamIds)])
+      .neq("status", "cancelled");
+
+    for (const m of members ?? []) {
+      const id = (m as { team_id: string | null }).team_id;
+      if (id) memberCounts.set(id, (memberCounts.get(id) ?? 0) + 1);
+    }
+  }
+
   const tickets = (data ?? []).map((row) => {
     const event = row.events as unknown as {
+      id: string;
       name: string;
+      max_team_size: number | null;
       day: number | null;
       start_time: string | null;
       end_time: string | null;
@@ -69,6 +110,13 @@ export async function getTicketsForUser(userId: string): Promise<Ticket[]> {
       amount_inr: number;
     } | null;
 
+    const teamRow = row.teams as unknown as {
+      id: string;
+      code: string;
+      leader_id: string;
+      capacity: number;
+    } | null;
+
     const confirmed = row.status === "confirmed";
 
     const status: TicketStatus = row.checked_in_at
@@ -79,6 +127,7 @@ export async function getTicketsForUser(userId: string): Promise<Ticket[]> {
 
     return {
       registrationId: row.id,
+      eventId: event.id,
       eventName: event.name.toUpperCase(),
       clubName: event.is_entry_pass
         ? "Rush4Rush Festival"
@@ -92,6 +141,16 @@ export async function getTicketsForUser(userId: string): Promise<Ticket[]> {
       // A pending ticket gets NO token. At a busy gate a QR that renders is a
       // QR that gets waved through, so an unpaid one must not exist at all.
       token: confirmed ? createTicketToken(row.id) : null,
+      team: teamRow
+        ? {
+            id: teamRow.id,
+            code: teamRow.code,
+            isLeader: teamRow.leader_id === userId,
+            members: memberCounts.get(teamRow.id) ?? 1,
+            capacity: teamRow.capacity,
+            maxTeamSize: event.max_team_size ?? 1,
+          }
+        : null,
     };
   });
 

@@ -57,7 +57,19 @@ export async function POST(req: Request) {
       ? body.eventIds.filter((x: unknown): x is string => typeof x === "string")
       : [];
 
-    const q = await quote({ userId: user.id, isUai: user.isUai, eventIds });
+    /**
+     * teamSizes maps event id → how many the leader is paying for. Validated
+     * against the event's min/max inside create_team(), and priced by
+     * team_fee() inside quote(). The client picks a size, never a price.
+     */
+    const rawSizes = (body.teamSizes ?? {}) as Record<string, unknown>;
+    const teamSizes: Record<string, number> = {};
+    for (const [id, value] of Object.entries(rawSizes)) {
+      const n = Number(value);
+      if (Number.isInteger(n) && n >= 1 && n <= 20) teamSizes[id] = n;
+    }
+
+    const q = await quote({ userId: user.id, isUai: user.isUai, eventIds, teamSizes });
 
     const useRazorpay =
       q.totalInr > 0 &&
@@ -87,9 +99,37 @@ export async function POST(req: Request) {
 
     const paymentId = data?.[0]?.payment_id as string;
 
+    /**
+     * Create the team now so the leader gets a code straight away, even while
+     * a manual UPI payment is still awaiting review. Capacity is what they
+     * paid for, so the code cannot admit more than that regardless.
+     */
+    const teams: Record<string, { teamId: string; code: string; capacity: number }> = {};
+    for (const [eventId, size] of Object.entries(teamSizes)) {
+      if (size < 2) continue;
+      const { data: teamRow, error: teamErr } = await admin.rpc("create_team", {
+        p_event_id: eventId,
+        p_user_id: user.id,
+        p_capacity: size,
+        p_name: null,
+      });
+      if (teamErr) {
+        console.error("[registrations] create_team failed", eventId, teamErr.message);
+        continue;
+      }
+      const row = teamRow?.[0];
+      if (row) {
+        teams[eventId] = {
+          teamId: row.team_id,
+          code: row.code,
+          capacity: row.capacity,
+        };
+      }
+    }
+
     // ── Free path ────────────────────────────────────────────────────────────
     if (q.totalInr === 0) {
-      return ok({ status: "confirmed", paymentId, quote: q });
+      return ok({ status: "confirmed", paymentId, quote: q, teams });
     }
 
     // ── Razorpay path ────────────────────────────────────────────────────────
@@ -109,6 +149,7 @@ export async function POST(req: Request) {
         status: "razorpay",
         paymentId,
         quote: q,
+        teams,
         order: {
           id: order.id,
           amount: order.amount, // paise — Razorpay checkout expects paise
@@ -125,6 +166,7 @@ export async function POST(req: Request) {
       status: "manual_upi",
       paymentId,
       quote: q,
+      teams,
       upi: {
         id: settings.upi_id,
         payeeName: settings.upi_payee_name,

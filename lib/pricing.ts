@@ -5,9 +5,10 @@ export const ENTRY_PASS_EVENT_ID = "r4r-entry-pass";
 /**
  * Server-side price computation.
  *
- * THE RULE: the client tells us WHICH events, never HOW MUCH. Every amount is
- * read fresh from events.fee_inr. A request body carrying `amount: 1` is the
- * oldest bug in online payments and this is where it gets closed.
+ * THE RULE: the client tells us WHICH events and, for team events, HOW MANY
+ * PEOPLE — never how much. Every amount is read fresh from the database. A
+ * request body carrying `amount: 1` is the oldest bug in online payments and
+ * this is where it gets closed.
  */
 
 export type PricedItem = {
@@ -26,14 +27,23 @@ export type Quote = {
 
 /**
  * Entry pass rule:
- *   UAI student  → free, and issued automatically so they still get a gate
- *                  ticket to scan
- *   Outsider     → ₹100, and required before any club event can be paid for
+ *   UAI student  → entry_fee_uai_inr   (₹50)
+ *   Outsider     → entry_fee_guest_inr (₹100)
+ * Compulsory for everyone: both days, food, DJ night.
  */
 export async function quote(params: {
   userId: string;
   isUai: boolean;
   eventIds: string[];
+  /**
+   * Team size the leader is paying for, keyed by event id.
+   *
+   * Priced by team_fee(), which reads the club's per-size table and falls back
+   * to events.fee_inr. This matters beyond the price: teams.capacity is set
+   * from what was PAID for, so without it a leader could pay the 2-person rate
+   * and hand the join code to a third person.
+   */
+  teamSizes?: Record<string, number>;
 }): Promise<Quote> {
   const admin = createAdminClient();
 
@@ -141,11 +151,29 @@ export async function quote(params: {
     }),
   );
 
+  /**
+   * Per-size team pricing. A club can charge ₹200 for a pair and ₹350 for a
+   * trio without that being a per-head multiple — team_fee() reads their table
+   * and falls back to the flat event fee where they haven't set one.
+   */
+  const teamFees = new Map<string, number>();
+  await Promise.all(
+    events.map(async (e) => {
+      const size = params.teamSizes?.[e.id];
+      if (!size || size < 1) return;
+      const { data } = await admin.rpc("team_fee", {
+        p_event_id: e.id,
+        p_size: size,
+      });
+      if (typeof data === "number") teamFees.set(e.id, data);
+    }),
+  );
+
   const items: PricedItem[] = events.map((e) => ({
     eventId: e.id,
     eventName: e.name,
     clubId: e.club_id,
-    feeInr: compedEvents.has(e.id) ? 0 : e.fee_inr,
+    feeInr: compedEvents.has(e.id) ? 0 : (teamFees.get(e.id) ?? e.fee_inr),
   }));
 
   const totalInr =

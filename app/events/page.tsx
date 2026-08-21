@@ -1,10 +1,65 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { clubEvents, type ClubEvent } from "@/data/clubs";
+import { apiGet } from "@/lib/api-client";
 import { useAuth } from "@/components/auth-provider";
 
 const categories = ["All", "Culture", "Business", "Tech", "Sports", "Social"] as const;
+
+/**
+ * Shape returned by /api/events. Mirrors the old ClubEvent from data/clubs.ts
+ * so the card and modal below did not need rewriting — but the values now come
+ * from the database, so the price on the card is the price you get charged.
+ */
+/**
+ * What the festival pass would cost the person currently looking. Fetched once
+ * per page load from /api/me/pass-status.
+ */
+type PassStatus = {
+  signedIn: boolean;
+  hasPass: boolean;
+  isOrganiser: boolean;
+  entryFeeInr: number | null;
+  uaiFeeInr: number;
+  guestFeeInr: number;
+};
+
+/**
+ * The line under a fee explaining the festival pass.
+ *
+ * The pass is bought during signup, so most signed-in people already hold one
+ * and see nothing here — a card that keeps announcing a fee they have already
+ * paid reads as a second charge.
+ *
+ * It still shows for people browsing logged out (so the total cost is honest
+ * before they commit) and for anyone who abandoned signup before paying.
+ */
+function passNote(pass: PassStatus | null): string | null {
+  if (!pass) return null;
+  if (pass.hasPass || pass.isOrganiser) return null;
+  if (!pass.signedIn) {
+    return `Plus the festival pass, required to attend — Rs.${pass.uaiFeeInr} UAI students / Rs.${pass.guestFeeInr} guests`;
+  }
+  return `You still need the Rs.${pass.entryFeeInr} festival pass to attend`;
+}
+
+type ClubEvent = {
+  id: string;
+  eventName: string;
+  club: string;
+  clubs: string[];
+  tagline: string;
+  description: string;
+  fee: number;
+  day: number;
+  startTime: string;
+  endTime: string;
+  venue: string;
+  category: string;
+  teamSize: string;
+  minTeamSize: number;
+  maxTeamSize: number;
+};
 
 type Category = (typeof categories)[number];
 
@@ -12,7 +67,9 @@ function EventModal({
   event,
   onClose,
   onEnroll,
+  pass,
 }: {
+  pass: PassStatus | null;
   event: ClubEvent;
   onClose: () => void;
   onEnroll: (event: ClubEvent) => void;
@@ -76,7 +133,7 @@ function EventModal({
         <p className="eyebrow">Event brief // day {event.day}</p>
         <p className="event-category">{event.category}</p>
         <h2 id="event-modal-title">{event.eventName}</h2>
-        <p className="event-modal-club">Hosted by {event.clubs.join(" × ")}</p>
+        <p className="event-modal-club">Hosted by {event.club}</p>
         <p className="event-description">{event.description}</p>
         <div className="event-detail-grid">
           <div>
@@ -98,6 +155,7 @@ function EventModal({
             <strong>Rs. {event.fee}</strong>
           </div>
         </div>
+        {passNote(pass) && <p className="pass-note">{passNote(pass)}</p>}
         <button
           className="button button-primary event-enroll"
           type="button"
@@ -113,9 +171,11 @@ function EventModal({
 function EventCard({
   event,
   onOpen,
+  pass,
 }: {
   event: ClubEvent;
   onOpen: (event: ClubEvent, element: HTMLButtonElement) => void;
+  pass: PassStatus | null;
 }) {
   const cardRef = useRef<HTMLButtonElement>(null);
   return (
@@ -130,11 +190,12 @@ function EventCard({
         <span className="event-day">Day {event.day}</span>
       </div>
       <h2>{event.eventName}</h2>
-      <p className="event-club">{event.clubs.join(" × ")}</p>
+      <p className="event-club">{event.club}</p>
       <div className="event-card-meta">
         <span>{event.fee === 0 ? "Free" : `Rs. ${event.fee}`}</span>
         <span>{event.teamSize}</span>
       </div>
+      {passNote(pass) && <p className="pass-note">{passNote(pass)}</p>}
     </button>
   );
 }
@@ -144,14 +205,31 @@ export default function EventsPage() {
   const [category, setCategory] = useState<Category>("All");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ClubEvent | null>(null);
+  const [events, setEvents] = useState<ClubEvent[]>([]);
+  const [pass, setPass] = useState<PassStatus | null>(null);
+  const [loading, setLoading] = useState(true);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const filtered = clubEvents.filter((event) => {
+
+  useEffect(() => {
+    apiGet<{ events: ClubEvent[] }>("/api/events")
+      .then((res) => setEvents(res.events))
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
+
+    // Separate request so a failure here never blocks the lineup from
+    // rendering — the note is helpful, but the events matter more.
+    apiGet<PassStatus>("/api/me/pass-status")
+      .then(setPass)
+      .catch(() => setPass(null));
+  }, []);
+
+  const filtered = events.filter((event) => {
     const matchesCategory = category === "All" || event.category === category;
     const search = query.trim().toLowerCase();
     return (
       matchesCategory &&
       (!search ||
-        `${event.eventName} ${event.clubs.join(" × ")} ${event.category}`.toLowerCase().includes(search))
+        `${event.eventName} ${event.club} ${event.category}`.toLowerCase().includes(search))
     );
   });
   const closeModal = () => {
@@ -171,8 +249,8 @@ export default function EventsPage() {
             Find your <span>event.</span>
           </h1>
           <p>
-            Twenty-three ways to enter the rush. Filter the signal, find your crew, and claim your
-            slot.
+            {loading ? "Loading the lineup…" : `${events.length} ways to enter the rush.`} Filter
+            the signal, find your crew, and claim your slot.
           </p>
         </header>
         <section className="event-controls" aria-label="Filter events">
@@ -200,13 +278,14 @@ export default function EventsPage() {
           </label>
         </section>
         <p className="results-count">
-          Showing {filtered.length} of {clubEvents.length} events
+          Showing {filtered.length} of {events.length} events
         </p>
         <section className="events-grid" aria-live="polite">
           {filtered.map((event) => (
             <EventCard
               key={event.id}
               event={event}
+              pass={pass}
               onOpen={(item, element) => {
                 triggerRef.current = element;
                 setSelected(item);
@@ -220,6 +299,7 @@ export default function EventsPage() {
       </main>
       {selected && (
         <EventModal
+          pass={pass}
           event={selected}
           onClose={closeModal}
           onEnroll={(event) =>
@@ -228,6 +308,8 @@ export default function EventsPage() {
               eventName: event.eventName,
               fee: event.fee,
               source: "event",
+              minTeamSize: event.minTeamSize,
+              maxTeamSize: event.maxTeamSize,
             })
           }
         />
