@@ -3669,3 +3669,36 @@ body:has([role="dialog"]) .role-switcher {
   }
 
 }
+/* ---- merch school picker (3 schools, stacked) ---- */
+.school-toggle {
+  flex-direction: column;
+  max-width: 420px;
+}
+.school-toggle button {
+  text-align: left;
+}
+.school-toggle button + button {
+  border-left: 1px solid var(--cyan);
+  border-top: 0;
+}
+.school-toggle button.selected + button {
+  border-left-color: var(--primary);
+}
+.merch-school-name {
+  color: var(--muted);
+  font-family: "Space Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  margin: 1.5rem 0 0;
+  text-transform: uppercase;
+}
+.merch-copy .merch-school-name + .merch-description {
+  margin-top: 0.75rem;
+}
+.modal-image img {
+  object-fit: contain;
+  object-position: center;
+}
+.modal-image {
+  background: #fff;
+}

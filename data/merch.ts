@@ -1,9 +1,10 @@
-export type MerchAudience = "UG" | "PG";
+export type MerchSchool = "music" | "ai" | "psych";
 
 export type MerchProduct = {
   id: string;
   name: string;
-  audience: MerchAudience;
+  shortName: string;
+  school: MerchSchool;
   price: number;
   currency: "INR";
   sizes: string[];
@@ -13,31 +14,45 @@ export type MerchProduct = {
 
 export const merch: MerchProduct[] = [
   {
-    id: "r4r-tshirt-ug",
-    name: "R4R Undergrad Tee",
-    audience: "UG",
+    id: "r4r-polo-music",
+    name: "School of Music, Sound & Cinematics",
+    shortName: "Music, Sound & Cinematics",
+    school: "music",
     price: 378,
     currency: "INR",
-    sizes: ["S", "M", "L", "XL", "XXL"],
+    sizes: ["M", "L", "XL"],
     description:
-      "The official Rush4Rush undergrad tee — black on neon pink. Built for the front row, the afterparty, and every memory in between.",
-    image: "/merch/r4r-tshirt-ug.png",
+      "Black polo with orange tipping, school crest on the chest and the Rush4Rush seal across the back.",
+    image: "/merch/r4r-polo-music.png",
   },
   {
-    id: "r4r-tshirt-pg",
-    name: "R4R Postgrad Tee",
-    audience: "PG",
+    id: "r4r-polo-ai",
+    name: "School of AI & Future Technology",
+    shortName: "AI & Future Technology",
+    school: "ai",
     price: 378,
     currency: "INR",
-    sizes: ["S", "M", "L", "XL", "XXL"],
+    sizes: ["M", "L", "XL"],
     description:
-      "The official Rush4Rush postgrad tee — charcoal on electric cyan. A cleaner cut for the ones running the show.",
-    image: "/merch/r4r-tshirt-pg.png",
+      "Orange polo with the university crest on the chest and the Rush4Rush seal across the back.",
+    image: "/merch/r4r-polo-ai.png",
+  },
+  {
+    id: "r4r-polo-psych",
+    name: "School of Psychology & Management",
+    shortName: "Psychology & Management",
+    school: "psych",
+    price: 378,
+    currency: "INR",
+    sizes: ["M", "L", "XL"],
+    description:
+      "Royal blue polo with the university crest on the chest and the Rush4Rush seal across the back.",
+    image: "/merch/r4r-polo-psych.png",
   },
 ];
 
-export function getMerchByAudience(audience: MerchAudience): MerchProduct {
-  return merch.find((item) => item.audience === audience) ?? merch[0];
+export function getMerchBySchool(school: MerchSchool): MerchProduct {
+  return merch.find((item) => item.school === school) ?? merch[0];
 }
 
 export default merch;

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { clubEvents } from "@/data/clubs";
-import { getMerchByAudience, type MerchAudience } from "@/data/merch";
+import { merch, getMerchBySchool, type MerchSchool } from "@/data/merch";
 import { useAuth } from "@/components/auth-provider";
 
 const gallery = [
@@ -26,7 +26,7 @@ const gallery = [
 ];
 
 function MerchPopup({ onClose }: { onClose: () => void }) {
-  const featured = getMerchByAudience("UG");
+  const featured = merch[0];
   return (
     <div className="merch-modal-backdrop" role="presentation" onClick={onClose}>
       <div
@@ -46,10 +46,10 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
         </button>
         <div className="modal-image">
           <Image
-            src={featured.image}
-            alt={featured.name}
+            src="/merch/r4r-polo-collage.png"
+            alt="R4R polos for all three schools"
             fill
-            sizes="(max-width: 700px) 90vw, 420px"
+            sizes="(max-width: 700px) 90vw, 400px"
           />
         </div>
         <div className="modal-copy">
@@ -59,7 +59,7 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
             <br />
             <span>Wear the R4R.</span>
           </h2>
-          <p className="modal-price">UG &amp; PG tees // from Rs. {featured.price}</p>
+          <p className="modal-price">School polos // Rs. {featured.price}</p>
           <Link className="button button-primary" href="#merch" onClick={onClose}>
             Shop the drop
           </Link>
@@ -72,14 +72,18 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
 export default function Page() {
   const { openEnrollment } = useAuth();
   const [showPopup, setShowPopup] = useState(false);
-  const [audience, setAudience] = useState<MerchAudience>("UG");
-  const product = getMerchByAudience(audience);
+  const [school, setSchool] = useState<MerchSchool>("music");
+  const product = getMerchBySchool(school);
   const [size, setSize] = useState(product.sizes[1]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setShowPopup(true), 600);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (!product.sizes.includes(size)) setSize(product.sizes[1]);
+  }, [product, size]);
 
   return (
     <div id="top" className="festival-page">
@@ -173,24 +177,20 @@ export default function Page() {
             <h2>
               Wear the <span>frequency.</span>
             </h2>
-            <div className="audience-toggle" role="group" aria-label="Choose your program">
-              <button
-                type="button"
-                className={audience === "UG" ? "selected" : ""}
-                onClick={() => setAudience("UG")}
-                aria-pressed={audience === "UG"}
-              >
-                Undergrad
-              </button>
-              <button
-                type="button"
-                className={audience === "PG" ? "selected" : ""}
-                onClick={() => setAudience("PG")}
-                aria-pressed={audience === "PG"}
-              >
-                Postgrad
-              </button>
+            <div className="audience-toggle school-toggle" role="group" aria-label="Choose your school">
+              {merch.map((item) => (
+                <button
+                  key={item.school}
+                  type="button"
+                  className={school === item.school ? "selected" : ""}
+                  onClick={() => setSchool(item.school)}
+                  aria-pressed={school === item.school}
+                >
+                  {item.shortName}
+                </button>
+              ))}
             </div>
+            <p className="merch-school-name">{product.name}</p>
             <p className="merch-description">{product.description}</p>
             <p className="merch-price">Rs. {product.price}</p>
             <div className="size-selector" aria-label="Choose size">
@@ -207,10 +207,10 @@ export default function Page() {
               ))}
             </div>
             <button className="button button-primary add-cart" type="button">
-              Add to cart / {audience} / {size}
+              Add to cart / {size}
             </button>
             <p className="micro-copy">
-              Separate cuts for UG &amp; PG students. Limited run, no restocks.
+              One polo per school. Limited run, no restocks.
               <br />
               Ships after the festival protocol goes live.
             </p>
