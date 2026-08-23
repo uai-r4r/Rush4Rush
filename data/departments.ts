@@ -70,5 +70,6 @@ export const departments: Department[] = [
     leaders: ["Abhishek Kumar", "Gun Gupta"],
     members: ["Ashmita Agarwal", "Pradyot Harkhani", "Akaash Badi", "Anushka Ghosh", "Ananya Soni", "Pushkar Pathak", "Ravi Ranjan", "Priganshi Gandhi", "Saniga Sawant", "Dhananjay Bakshi", "Jalish", "Anushka Sharma", "Naman Ruhela", "Diby Khatri", "Abhishek Yadav", "Darpan", "Sriram"],
   },
-  { name: "Event", leaders: ["Pearl Choudhary"], members: ["Hiren Jhurani"] },
+  { name: "Event", leaders: ["Pearl Choudhary"], members: [] },
 ];
+  

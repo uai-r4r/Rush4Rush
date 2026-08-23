@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import { techTeam } from "@/data/team";
+import DepartmentGallery from "@/components/DepartmentGallery";
 
 const logos = [
   {
@@ -131,7 +132,7 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
-
+        <DepartmentGallery />
         <section className="about-section" aria-labelledby="tech-team-title">
           <p className="eyebrow" id="tech-team-title">
             Tech Team
