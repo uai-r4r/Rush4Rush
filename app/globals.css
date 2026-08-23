@@ -149,6 +149,8 @@ button {
   margin: 0 0 2.7rem;
   padding: 0.72rem 1rem;
   text-transform: uppercase;
+  position: relative;
+  z-index: 2;
 }
 .eyebrow span {
   color: var(--cyan);
@@ -1438,6 +1440,8 @@ body.menu-open {
   border-top: 1px solid var(--border);
   margin-top: 5rem;
   padding-top: 3.5rem;
+  position: relative;
+  z-index: 2;
 }
 .about-section > .eyebrow {
   margin-bottom: 2.5rem;
@@ -1792,7 +1796,8 @@ body.menu-open {
 .events-header,
 .schedule-header,
 .map-header,
-.about-header {
+.about-header
+ {
   position: relative;
   z-index: 2;
 }
