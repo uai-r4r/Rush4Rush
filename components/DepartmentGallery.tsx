@@ -76,7 +76,7 @@ function DepartmentCard({
         <span className="dept-kicker">Department</span>
         <span className="dept-name">{dept.name}</span>
         <span className="dept-leads">
-          {dept.leaders.length > 1 ? "Leads" : "Lead"}: {dept.leaders.join(" · ")}
+          {dept.leaders.length > 1 ? "Heads" : "Head"}: {dept.leaders.join(" · ")}
         </span>
         <span className="dept-count">{dept.members.length} members</span>
       </span>
@@ -144,7 +144,7 @@ export default function DepartmentGallery() {
           Departments
         </p>
         <p className="dept-intro">
-          Eleven departments run the fest. Open any one to meet its leads and crew.
+          Ten departments run the fest. Open any one to meet its heads and crew.
         </p>
 
         <div className="dept-rail-wrap">
@@ -202,7 +202,7 @@ export default function DepartmentGallery() {
 
             <div className="team-grid dept-leader-grid">
               {active.leaders.map((leader) => (
-                <PersonCard key={leader} name={leader} role="Leader" />
+                <PersonCard key={leader} name={leader} role="Head" />
               ))}
             </div>
 

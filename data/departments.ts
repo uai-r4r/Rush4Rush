@@ -31,6 +31,7 @@ export const coreTeam: { role: string; name: string }[] = [
   { role: "Head of R4R", name: "Yash Pardeshi" },
   { role: "Co-Head of R4R", name: "Adarsh Nema" },
   { role: "General Secretary", name: "Bhavana Ajith" },
+  { name: "Pearl Choudhary", role: "Events Head" },
   { role: "Flashmob", name: "Mohi Jain" },
   { role: "Anchoring", name: "Yashita" },
 ];
@@ -49,7 +50,7 @@ export const departments: Department[] = [
     members: ["Isha Verma", "Anjali Kumari", "Vansh Kohli", "Ananya Neogi", "Dimpi Khatri", "Khushi Pareek", "Riyaz Mukharjee", "Swarangi Pawar", "Adrika Gupta", "Swati Pandey"],
   },
   { name: "Hospitality", leaders: ["Mandvi"], members: ["Kumari Sonali", "Ridhhi Bansal", "Anshika Agrawal"] },
-  { name: "Unstop", leaders: ["Anchal Pandey"], members: ["Anushka", "Priyanshi", "Prayag"] },
+  
   {
     name: "DM",
     leaders: ["Adarsh Nema", "Ratnadeep Patil"],
@@ -70,6 +71,6 @@ export const departments: Department[] = [
     leaders: ["Abhishek Kumar", "Gun Gupta"],
     members: ["Ashmita Agarwal", "Pradyot Harkhani", "Akaash Badi", "Anushka Ghosh", "Ananya Soni", "Pushkar Pathak", "Ravi Ranjan", "Priganshi Gandhi", "Saniga Sawant", "Dhananjay Bakshi", "Jalish", "Anushka Sharma", "Naman Ruhela", "Diby Khatri", "Abhishek Yadav", "Darpan", "Sriram"],
   },
-  { name: "Event", leaders: ["Pearl Choudhary"], members: [] },
+  { name: "Event", leaders: ["Pearl Choudhary"], members: ["Yash Goutam","Harshit Panjwani","Mahak Dhamecha"] },
 ];
   

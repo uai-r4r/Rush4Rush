@@ -29,7 +29,7 @@ export const techTeam: TeamMember[] = [
     github: "https://github.com/",
   },
   {
-    name: "Hiren Jurani",
+    name: "Hiren Jhurani",
     role: "Product Designer",
     photo: "/team/mira-kapoor.jpg",
     linkedin: "https://www.linkedin.com/",

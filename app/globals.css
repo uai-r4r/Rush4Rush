@@ -2666,6 +2666,9 @@ body:has([role="dialog"]) .role-switcher {
   border: 1px solid var(--cyan);
   display: grid;
   gap: 1.2rem;
+  max-height: 90dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   max-width: 520px;
   padding: 2rem;
   position: relative;
@@ -3106,7 +3109,7 @@ body:has([role="dialog"]) .role-switcher {
 /* Payment proof lightbox — real screenshot instead of the stub placeholder. */
 .proof-image {
   width: 100%;
-  max-height: 52vh;
+  max-height: 38vh;
   object-fit: contain;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
@@ -3438,7 +3441,12 @@ body:has([role="dialog"]) .role-switcher {
 
 /* ---- /about — core team + departments ---- */
 .team-grid-core {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
+}
+@media (max-width: 1250px) {
+  .team-grid-core {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 .team-avatar-photo {
   overflow: hidden;
