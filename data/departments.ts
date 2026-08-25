@@ -6,6 +6,7 @@ export type Department = {
 
 /** Photos live in /public/team — key must match the person's name exactly. */
 export const photos: Record<string, string> = {
+  "Amrita Mathews": "/team/Amrita_Mathews.jpg",
   "Dakshi Gala": "/team/Dakshi_Gala.jpg",
   "Vratika Jain": "/team/Vratika_Jain.jpg",
   Yashita: "/team/Yashika.jpg",
@@ -26,6 +27,10 @@ export const photos: Record<string, string> = {
   Mandvi: "/team/Mandvi_Singh_Baghel.jpg",
   "Mahi Vashisht": "/team/Mahi_Vashisht.jpg",
 };
+
+export const higherAuthority: { role: string; name: string }[] = [
+  { role: "R4R Annual Event Head", name: "Amrita Mathews" },
+];
 
 export const coreTeam: { role: string; name: string }[] = [
   { role: "Head of R4R", name: "Yash Pardeshi" },

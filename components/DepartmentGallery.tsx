@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   departments,
   coreTeam,
+  higherAuthority,
   photos,
   type Department,
 } from "@/data/departments";
@@ -128,6 +129,17 @@ export default function DepartmentGallery() {
 
   return (
     <>
+      <section className="about-section" aria-labelledby="higher-authority-title">
+        <p className="eyebrow" id="higher-authority-title">
+          Higher Authority
+        </p>
+        <div className="team-grid team-grid-core">
+          {higherAuthority.map((person) => (
+            <PersonCard key={person.role} name={person.name} role={person.role} />
+          ))}
+        </div>
+      </section>
+
       <section className="about-section" aria-labelledby="core-team-title">
         <p className="eyebrow" id="core-team-title">
           Core Team

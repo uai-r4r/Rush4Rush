@@ -43,6 +43,7 @@ function GitHubIcon() {
 
 export default function AboutPage() {
   const [status, setStatus] = useState<"idle" | "sent">("idle");
+  const [photoErrors, setPhotoErrors] = useState<Record<string, boolean>>({});
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -140,9 +141,24 @@ export default function AboutPage() {
           <div className="team-grid">
             {techTeam.map((member) => (
               <article className="team-card" key={member.name}>
-                <div className="team-avatar" aria-hidden="true">
-                  {initials(member.name)}
-                </div>
+                {member.photo && !photoErrors[member.name] ? (
+                  <div className="team-avatar team-avatar-photo">
+                    <Image
+                      src={member.photo}
+                      alt={member.name}
+                      fill
+                      sizes="(max-width: 700px) 100vw, (max-width: 950px) 50vw, 260px"
+                      style={{ objectFit: "cover", objectPosition: "top" }}
+                      onError={() =>
+                        setPhotoErrors((prev) => ({ ...prev, [member.name]: true }))
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div className="team-avatar" aria-hidden="true">
+                    {initials(member.name)}
+                  </div>
+                )}
                 <h3 className="team-name">{member.name}</h3>
                 <p className="team-role">{member.role}</p>
                 <div className="team-socials">

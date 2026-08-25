@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -65,8 +66,25 @@ export function Navbar() {
     <>
       <header className={`site-nav ${scrolled ? "site-nav-scrolled" : ""}`}>
         <Link className="brand-mark" href="/" aria-label="Rush4Rush home">
-          <span className="brand-r">R</span>
-          <span>4R</span>
+          <Image
+            className="brand-logo brand-logo-r4r"
+            src="/logos/r4r-badge.png"
+            alt=""
+            width={40}
+            height={40}
+            priority
+          />
+          <span className="brand-text">
+            <span className="brand-r">R</span>
+            <span>4R</span>
+          </span>
+          <Image
+            className="brand-logo brand-logo-uai"
+            src="/logos/uai-mark.png"
+            alt=""
+            width={60}
+            height={33}
+          />
         </Link>
         <nav className="desktop-nav" aria-label="Primary navigation">
           {allLinks.map((link) => (
