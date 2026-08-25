@@ -47,11 +47,24 @@ export async function POST(
       .map((r) => (r.events as unknown as { club_id: string }).club_id)
       .filter((c) => c !== "r4r"); // entry pass belongs to the fest, not a club
 
-    // Entry-pass-only payments are the super admin's to approve, not a club's.
+    /**
+     * Festival pass payments belong to no club, so club scoping cannot apply.
+     * Approval is limited to super admins plus anyone flagged
+     * can_approve_passes — a narrower permission that does NOT grant
+     * cross-club data, schedule edits or comped fees.
+     *
+     * Spreading this matters on the manual UPI path: a pending pass blocks
+     * enrolling AND joining a team, so a backlog makes the whole site look
+     * broken to someone who has already paid.
+     */
     if (clubIds.length === 0) {
-      if (user.role !== "super_admin") {
+      const { data: allowed } = await admin.rpc("user_can_approve_pass", {
+        p_user_id: user.id,
+      });
+
+      if (!allowed) {
         throw Object.assign(
-          new Error("Entry pass payments are reviewed by the core team."),
+          new Error("Festival pass payments are reviewed by the core team."),
           { status: 403 },
         );
       }

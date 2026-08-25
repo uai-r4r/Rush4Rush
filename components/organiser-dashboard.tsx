@@ -73,6 +73,10 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
   const [sort, setSort] = useState<"Newest" | "Name" | "Status" | "Amount">("Newest");
   const [proof, setProof] = useState<Row | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // Bulk selection. Manual UPI means hundreds of approvals; one at a time is
+  // not a workable job for a fest weekend.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -143,6 +147,56 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
       setError(err instanceof Error ? err.message : "Could not update that payment.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  /** Only pending-review rows can be acted on, so only those are selectable. */
+  const selectable = useMemo(
+    () => filtered.filter((r) => r.payment_status === "pending_review" && r.payment_id),
+    [filtered],
+  );
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelected((prev) =>
+      prev.size === selectable.length
+        ? new Set()
+        : new Set(selectable.map((r) => r.payment_id!)),
+    );
+  }
+
+  async function bulkReview(action: "approve" | "reject") {
+    if (selected.size === 0) return;
+    if (
+      action === "reject" &&
+      !confirm(`Reject ${selected.size} payments? Everyone affected loses their place.`)
+    ) {
+      return;
+    }
+    setBulkBusy(true);
+    setError(null);
+    try {
+      const res = await apiPost<{ approved: number; skipped: number }>(
+        "/api/payments/review/bulk",
+        { paymentIds: [...selected], action },
+      );
+      setSelected(new Set());
+      await load();
+      if (res.skipped > 0) {
+        setError(`${res.skipped} skipped — not your club's to review.`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bulk action failed.");
+    } finally {
+      setBulkBusy(false);
     }
   }
 
@@ -255,6 +309,43 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
 
       {error && <p className="auth-error">{error}</p>}
 
+      {selectable.length > 0 && (
+        <div className="bulk-bar">
+          <label>
+            <input
+              type="checkbox"
+              checked={selected.size === selectable.length && selectable.length > 0}
+              onChange={toggleAll}
+            />
+            <span>
+              {selected.size > 0
+                ? `${selected.size} selected`
+                : `${selectable.length} awaiting review`}
+            </span>
+          </label>
+          {selected.size > 0 && (
+            <div className="bulk-actions">
+              <button
+                className="button button-primary"
+                type="button"
+                disabled={bulkBusy}
+                onClick={() => bulkReview("approve")}
+              >
+                {bulkBusy ? "WORKING…" : `APPROVE ${selected.size}`}
+              </button>
+              <button
+                className="text-button"
+                type="button"
+                disabled={bulkBusy}
+                onClick={() => bulkReview("reject")}
+              >
+                Reject
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <p className="dashboard-count">Loading registrations…</p>
       ) : (
@@ -263,6 +354,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
             <table>
               <thead>
                 <tr>
+                  <th aria-label="Select" />
                   <th>Attendee</th>
                   <th>Club / event</th>
                   <th>Amount</th>
@@ -277,6 +369,16 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
                   const awaiting = row.payment_status === "pending_review";
                   return (
                     <tr key={row.registration_id}>
+                      <td>
+                        {awaiting && row.payment_id && (
+                          <input
+                            type="checkbox"
+                            checked={selected.has(row.payment_id)}
+                            onChange={() => toggle(row.payment_id!)}
+                            aria-label={`Select ${row.attendee_name ?? row.email}`}
+                          />
+                        )}
+                      </td>
                       <td>
                         <strong>{row.attendee_name ?? "—"}</strong>
                         <span>{row.email}</span>
