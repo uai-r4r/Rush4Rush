@@ -35,14 +35,8 @@ type PassStatus = {
  * before they commit) and for anyone who abandoned signup before paying.
  */
 function passNote(pass: PassStatus | null): string | null {
-  if (!pass) return null;
-  if (pass.hasPass || pass.isOrganiser) return null;
-  if (!pass.signedIn) {
-    return `Plus the festival pass, required to attend — Rs.${pass.uaiFeeInr} UAI students / Rs.${pass.guestFeeInr} guests`;
-  }
-  return `You still need the Rs.${pass.entryFeeInr} festival pass to attend`;
+  return null;
 }
-
 type ClubEvent = {
   id: string;
   eventName: string;
@@ -155,7 +149,6 @@ function EventModal({
             <strong>Rs. {event.fee}</strong>
           </div>
         </div>
-        {passNote(pass) && <p className="pass-note">{passNote(pass)}</p>}
         <button
           className="button button-primary event-enroll"
           type="button"
