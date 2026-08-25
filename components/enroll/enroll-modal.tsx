@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { apiGet, apiPost, apiUpload } from "@/lib/api-client";
+import { apiPost, apiUpload } from "@/lib/api-client";
 import { CustomListbox } from "@/components/custom-listbox";
 import type { EnrollmentIntent } from "@/components/auth-provider";
 
@@ -84,12 +84,6 @@ export function EnrollModal({
   // Defaults to the event's minimum, so a 2..4 event opens on 2 rather than
   // making the leader think about it.
   const [teamSize, setTeamSize] = useState(Math.max(1, intent.minTeamSize ?? 1));
-  /**
-   * Per-size prices, fetched rather than derived. A club can charge Rs.200 for
-   * a pair and Rs.350 for a trio without that being a per-head multiple, so
-   * the only correct source is team_fee() on the server.
-   */
-  const [teamPrices, setTeamPrices] = useState<Record<number, number> | null>(null);
   // Inline profile completion — see the 409 branch in startEnrollment().
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -105,34 +99,6 @@ export function EnrollModal({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
-
-  /**
-   * Load the price of each size up front. Solo events skip it — there is
-   * nothing to choose between.
-   *
-   * On failure the buttons fall back to bare numbers rather than blocking
-   * enrolment: the server prices the checkout regardless, so a missing label
-   * costs clarity, not correctness.
-   */
-  useEffect(() => {
-    if ((intent.maxTeamSize ?? 1) <= 1) return;
-    let alive = true;
-    apiGet<{ sizes: { size: number; feeInr: number }[] }>(
-      `/api/events/${encodeURIComponent(intent.eventId)}/team-pricing`,
-    )
-      .then((data) => {
-        if (!alive) return;
-        setTeamPrices(
-          Object.fromEntries(data.sizes.map((s) => [s.size, s.feeInr])),
-        );
-      })
-      .catch(() => {
-        if (alive) setTeamPrices(null);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [intent.eventId, intent.maxTeamSize]);
 
   async function startEnrollment() {
     setStage("working");
@@ -303,20 +269,11 @@ export function EnrollModal({
                         onClick={() => setTeamSize(n)}
                         aria-pressed={teamSize === n}
                       >
-                        <span className="team-size-n">{n}</span>
-                        {teamPrices?.[n] != null && (
-                          <span className="team-size-fee">Rs.{teamPrices[n]}</span>
-                        )}
+                        {n}
                       </button>
                     ))}
                   </div>
                 </label>
-                {teamPrices?.[teamSize] != null && (
-                  <p className="team-size-total">
-                    Team of {teamSize} — <strong>Rs.{teamPrices[teamSize]}</strong>
-                    <span> · entry passes charged separately at checkout</span>
-                  </p>
-                )}
                 <p className="auth-hint">
                   Need another place later? Your leader can add one from the ticket and pay the
                   difference.
@@ -481,7 +438,7 @@ export function EnrollModal({
             )}
 
             <label className="auth-field">
-              <span>UPI REFERENCE / UTR (OPTIONAL)</span>
+              <span>UPI REFERENCE / UTR (REQUIRED)</span>
               <input
                 value={payerRef}
                 onChange={(e) => setPayerRef(e.target.value)}
@@ -504,7 +461,7 @@ export function EnrollModal({
             <button
               className="button button-primary"
               type="button"
-              disabled={!file || uploading}
+              disabled={!file || payerRef.replace(/\D/g, "").length < 6 || uploading}
               onClick={submitProof}
             >
               {uploading ? "UPLOADING…" : "SUBMIT PAYMENT"}

@@ -36,7 +36,26 @@ export async function POST(req: Request) {
      * from squinting at a screenshot into searching a number, and it is what
      * reconciles against a bank statement later.
      */
-    const payerRef = String(form.get("payerRef") ?? "").trim().slice(0, 40) || null;
+    /**
+     * UTR is REQUIRED, not optional.
+     *
+     * A screenshot alone cannot be matched against a bank statement without
+     * someone reading the number off an image. A typed reference makes
+     * reconciliation a search rather than a squint, and duplicates become
+     * findable — the same UTR submitted twice is the obvious fraud case.
+     *
+     * Still unverified: anyone can type anything. It is a matching key, not
+     * proof of payment.
+     */
+    const payerRef = String(form.get("payerRef") ?? "").trim().slice(0, 40);
+    const refDigits = payerRef.replace(/\D/g, "");
+
+    if (refDigits.length < 6) {
+      throw Object.assign(
+        new Error("Enter the UPI reference (UTR) from your payment app."),
+        { status: 400, code: "UTR_REQUIRED" },
+      );
+    }
 
     if (!/^[0-9a-f-]{36}$/i.test(paymentId)) {
       throw Object.assign(new Error("Invalid payment reference"), { status: 400 });

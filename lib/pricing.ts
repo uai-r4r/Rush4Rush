@@ -1,14 +1,27 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
+/**
+ * Marker registration for "this outsider has paid their one-off solo fee".
+ * Retained under the old id so existing rows keep working, and because it also
+ * gives everyone a gate ticket to scan at the door.
+ */
 export const ENTRY_PASS_EVENT_ID = "r4r-entry-pass";
 
 /**
  * Server-side price computation.
  *
  * THE RULE: the client tells us WHICH events and, for team events, HOW MANY
- * PEOPLE — never how much. Every amount is read fresh from the database. A
- * request body carrying `amount: 1` is the oldest bug in online payments and
- * this is where it gets closed.
+ * PEOPLE — never how much. A request body carrying `amount: 1` is the oldest
+ * bug in online payments and this is where it gets closed.
+ *
+ * FEE MODEL
+ *   UAI students          → nothing beyond club event fees
+ *   Outsiders, solo event → Rs.50 ONCE, on their first solo registration
+ *   Outsiders, team event → Rs.100 PER TEAM registration, paid by the leader
+ *                           for the whole team, every time
+ *
+ * Because the fee depends on solo-versus-team, it cannot be collected at
+ * signup — at that point nobody knows what they will enter.
  */
 
 export type PricedItem = {
@@ -16,33 +29,23 @@ export type PricedItem = {
   eventName: string;
   clubId: string;
   feeInr: number;
+  /** Registration fee attached to this event, shown as its own line. */
+  registrationFeeInr: number;
+  isTeam: boolean;
 };
 
 export type Quote = {
   items: PricedItem[];
+  /** Kept for callers that still read it: total registration fees in this quote. */
   needsEntryPass: boolean;
   entryPassInr: number;
   totalInr: number;
 };
 
-/**
- * Entry pass rule:
- *   UAI student  → entry_fee_uai_inr   (₹50)
- *   Outsider     → entry_fee_guest_inr (₹100)
- * Compulsory for everyone: both days, food, DJ night.
- */
 export async function quote(params: {
   userId: string;
   isUai: boolean;
   eventIds: string[];
-  /**
-   * Team size the leader is paying for, keyed by event id.
-   *
-   * Priced by team_fee(), which reads the club's per-size table and falls back
-   * to events.fee_inr. This matters beyond the price: teams.capacity is set
-   * from what was PAID for, so without it a leader could pay the 2-person rate
-   * and hand the join code to a third person.
-   */
   teamSizes?: Record<string, number>;
 }): Promise<Quote> {
   const admin = createAdminClient();
@@ -60,7 +63,7 @@ export async function quote(params: {
 
   const { data: events, error } = await admin
     .from("events")
-    .select("id, name, club_id, fee_inr, is_published, capacity")
+    .select("id, name, club_id, fee_inr, is_published, capacity, max_team_size")
     .in("id", requested)
     .eq("is_published", true);
 
@@ -72,8 +75,6 @@ export async function quote(params: {
     });
   }
 
-  // Capacity check. Counts confirmed registrations only — a pending row that
-  // never gets paid should not hold a seat hostage.
   for (const ev of events) {
     if (ev.capacity == null) continue;
     const { count } = await admin
@@ -86,7 +87,16 @@ export async function quote(params: {
     }
   }
 
-  // Already has a paid (or free-issued) entry pass?
+  const { data: settings } = await admin
+    .from("settings")
+    .select("solo_fee_inr, team_fee_inr")
+    .eq("id", true)
+    .single();
+
+  const soloFee = settings?.solo_fee_inr ?? 50;
+  const teamFeeFlat = settings?.team_fee_inr ?? 100;
+
+  // Has this outsider already paid the one-off solo fee?
   const { data: existingPass } = await admin
     .from("registrations")
     .select("id")
@@ -95,50 +105,20 @@ export async function quote(params: {
     .eq("status", "confirmed")
     .maybeSingle();
 
-  /**
-   * Entry pass pricing lives in settings, not in code.
-   *   UAI student → entry_fee_uai_inr   (₹50)
-   *   Outsider    → entry_fee_guest_inr (₹100)
-   * Fest pricing changes late; a change should be one UPDATE, not a redeploy.
-   */
-  const { data: settings } = await admin
-    .from("settings")
-    .select("entry_fee_uai_inr, entry_fee_guest_inr")
-    .eq("id", true)
-    .single();
-
-  /**
-   * ONLY super admins are comped the pass. Club admins and volunteers pay it
-   * like everyone else — they are students attending the festival, and the
-   * food and DJ night cost the same to provide whoever eats them.
-   *
-   * The pass is still ISSUED at ₹0 for a super admin rather than skipped, so
-   * they get a gate ticket and a QR like everyone else and the scanner needs
-   * no special case for staff.
-   *
-   * This rule is duplicated in entryPassQuote() below. If you change who is
-   * comped, change it in BOTH — a mismatch means someone is comped at signup
-   * and charged at enrol, or the reverse.
-   */
   const { data: profile } = await admin
     .from("profiles")
     .select("role")
     .eq("id", params.userId)
     .single();
 
+  // Super admins pay nothing. UAI students pay no registration fee — event
+  // fees still apply to them.
   const comped = profile?.role === "super_admin";
-
-  const needsEntryPass = !existingPass;
-  const entryPassInr = comped
-    ? 0
-    : params.isUai
-      ? (settings?.entry_fee_uai_inr ?? 50)
-      : (settings?.entry_fee_guest_inr ?? 100);
+  const paysRegistrationFees = !comped && !params.isUai;
 
   /**
    * Organiser comp: a club admin doesn't pay for their own club's events, but
-   * does pay for other clubs'. Checked per event, server-side — the client
-   * never gets to assert that something is free.
+   * does pay for other clubs'. Checked per event, server-side.
    */
   const compedEvents = new Set<string>();
   await Promise.all(
@@ -151,11 +131,7 @@ export async function quote(params: {
     }),
   );
 
-  /**
-   * Per-size team pricing. A club can charge ₹200 for a pair and ₹350 for a
-   * trio without that being a per-head multiple — team_fee() reads their table
-   * and falls back to the flat event fee where they haven't set one.
-   */
+  // Per-size team pricing, where a club has set it.
   const teamFees = new Map<string, number>();
   await Promise.all(
     events.map(async (e) => {
@@ -169,31 +145,66 @@ export async function quote(params: {
     }),
   );
 
-  const items: PricedItem[] = events.map((e) => ({
-    eventId: e.id,
-    eventName: e.name,
-    clubId: e.club_id,
-    feeInr: compedEvents.has(e.id) ? 0 : (teamFees.get(e.id) ?? e.fee_inr),
-  }));
+  /**
+   * Registration fees, per event.
+   *
+   * Solo: charged once ever, so only the FIRST solo event in this quote adds
+   * it — and only if they have not already paid it in a previous checkout.
+   *
+   * Team: charged on every team registration, one flat amount for the whole
+   * team regardless of size.
+   */
+  let soloFeeStillOwed = paysRegistrationFees && !existingPass;
+  let registrationTotal = 0;
+
+  const items: PricedItem[] = events.map((e) => {
+    const isTeam = (e.max_team_size ?? 1) > 1 && Boolean(params.teamSizes?.[e.id]);
+    const eventFee = compedEvents.has(e.id) ? 0 : (teamFees.get(e.id) ?? e.fee_inr);
+
+    let registrationFeeInr = 0;
+    if (paysRegistrationFees) {
+      if (isTeam) {
+        registrationFeeInr = teamFeeFlat;
+      } else if (soloFeeStillOwed) {
+        registrationFeeInr = soloFee;
+        soloFeeStillOwed = false; // once only
+      }
+    }
+    registrationTotal += registrationFeeInr;
+
+    return {
+      eventId: e.id,
+      eventName: e.name,
+      clubId: e.club_id,
+      feeInr: eventFee,
+      registrationFeeInr,
+      isTeam,
+    };
+  });
 
   const totalInr =
-    items.reduce((sum, i) => sum + i.feeInr, 0) +
-    (needsEntryPass ? entryPassInr : 0);
+    items.reduce((sum, i) => sum + i.feeInr + i.registrationFeeInr, 0);
 
-  return { items, needsEntryPass, entryPassInr, totalInr };
+  /**
+   * Issue the gate-ticket marker whenever an outsider pays a registration fee
+   * for the first time, so everyone has something to scan at the door.
+   */
+  const needsEntryPass = !existingPass && registrationTotal > 0;
+
+  return {
+    items,
+    needsEntryPass,
+    entryPassInr: 0, // registration fees are itemised per event now
+    totalInr,
+  };
 }
 
 /**
- * What the entry pass costs THIS person, with no club event attached.
+ * Retained so the pass-status endpoint keeps compiling.
  *
- * quote() deliberately refuses an empty event list — enrolling in nothing is a
- * bug there. But the signup pass step buys the pass on its own, so it needs
- * the same pricing rules without that guard.
- *
- * Comp rule: super admin only. Club admins and volunteers pay the pass. Note
- * this is SEPARATE from the per-event organiser comp in quote(), which still
- * gives a club admin their own club's events free — not paying to run your own
- * event is a different question from paying to attend the festival.
+ * There is no longer a standalone pass to buy: fees are charged at enrolment
+ * and depend on whether the event is solo or team. Reports what an outsider
+ * would owe on their next SOLO registration, and 0 once paid.
  */
 export async function entryPassQuote(params: {
   userId: string;
@@ -211,7 +222,7 @@ export async function entryPassQuote(params: {
 
   const { data: settings } = await admin
     .from("settings")
-    .select("entry_fee_uai_inr, entry_fee_guest_inr")
+    .select("solo_fee_inr")
     .eq("id", true)
     .single();
 
@@ -221,16 +232,11 @@ export async function entryPassQuote(params: {
     .eq("id", params.userId)
     .single();
 
-  // Super admin only. See the matching note in quote() above.
-  const comped = profile?.role === "super_admin";
+  const comped = profile?.role === "super_admin" || params.isUai;
 
   return {
     alreadyHeld: Boolean(existingPass),
     comped,
-    amountInr: comped
-      ? 0
-      : params.isUai
-        ? (settings?.entry_fee_uai_inr ?? 50)
-        : (settings?.entry_fee_guest_inr ?? 100),
+    amountInr: comped || existingPass ? 0 : (settings?.solo_fee_inr ?? 50),
   };
 }

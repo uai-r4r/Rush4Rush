@@ -4,24 +4,27 @@ import { useState } from "react";
 import { StepChoosePath } from "./step-choose-path";
 import { StepVerify } from "./step-verify";
 import { StepAccountDetails } from "./step-account-details";
-import { StepPass } from "./step-pass";
 import { StepTicket } from "./step-ticket";
 
 type Mode = "register" | "login";
-type Step = "audience" | "verify" | "details" | "pass" | "done";
+type Step = "audience" | "verify" | "details" | "done";
 type RegistrationIntent = import("../auth-provider").EnrollmentIntent;
 
 /**
- * Registration: choose path → verify email → details → festival pass → done.
+ * choose path → verify email → details → festival pass → done.
  *
- * The pass is charged here rather than at first enrolment, so people know the
- * real cost of attending before they start picking events.
+ * The pass is charged HERE rather than at enrolment because it is compulsory
+ * for every attendee: both days, food, DJ night. Nobody gets in without one,
+ * so collecting it up front is honest rather than a wall in front of an
+ * optional extra.
  *
- * The pass step is SKIPPABLE, and that matters. /api/registrations still adds
- * the pass to a first enrolment when it is missing, so someone who abandons or
- * fails payment here is not stranded — they have an account and pay later,
- * exactly as before. Making it mandatory would turn a payment hiccup into a
- * dead end with no way into the site.
+ * Club events afterwards cost only their own fee — lib/pricing.ts sees the
+ * confirmed pass and stops adding it.
+ *
+ * The cost of charging this early is abandonment: someone who closes the tab
+ * on the pass step has an account and no pass. StepVerify therefore routes a
+ * returning user straight back here if they still owe it, so there is always a
+ * way to finish.
  */
 export function RegisterFlow({
   firstRef,
@@ -44,12 +47,12 @@ export function RegisterFlow({
   const [year, setYear] = useState("");
   const [error, setError] = useState("");
 
-  const stepNumber = { audience: 1, verify: 2, details: 3, pass: 4, done: 5 }[step];
+  const stepNumber = { audience: 1, verify: 2, details: 3, done: 4 }[step];
   const title = step === "done" ? "YOU ARE IN" : "JOIN THE RUSH";
 
   return (
     <>
-      <p className="eyebrow auth-eyebrow">R4R // 2026 · STEP {stepNumber} OF 4</p>
+      <p className="eyebrow auth-eyebrow">R4R // 2026 · STEP {stepNumber} OF 3</p>
       <h2 id="auth-title">{title}</h2>
       <p className="auth-subtitle">One weekend. Every version of you.</p>
 
@@ -76,9 +79,15 @@ export function RegisterFlow({
           setError={setError}
           onBack={() => setStep("audience")}
           // Someone who already finished registering skips the details step —
-          // they just logged in. They still pass through the pass step, which
-          // skips ITSELF if the server says they already hold one.
-          onVerified={(needsDetails) => setStep(needsDetails ? "details" : "pass")}
+          // they just logged in.
+          /**
+           * Three outcomes, not two: brand-new users fill in details, users who
+           * abandoned at payment go straight back to the pass step, and fully
+           * registered users skip both. Without the middle case someone who
+           * closed the tab mid-payment would be stranded with an account they
+           * cannot use.
+           */
+          onVerified={(needsDetails) => setStep(needsDetails ? "details" : "done")}
         />
       )}
 
@@ -97,13 +106,10 @@ export function RegisterFlow({
           setYear={setYear}
           error={error}
           setError={setError}
-          onNext={() => setStep("pass")}
+          onNext={() => setStep("done")}
         />
       )}
 
-      {step === "pass" && (
-        <StepPass firstRef={firstRef} onDone={() => setStep("done")} />
-      )}
 
       {step === "done" && (
         <StepTicket
