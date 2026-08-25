@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api-client";
 
 /**
- * The prices come from /api/me/pass-status, which reads them from settings —
- * not hardcoded here. Fest pricing changes late, and a screen confidently
- * stating the wrong number is worse than one stating none, so the line simply
- * does not render until the real figure arrives.
+ * Fee amounts come from the API, not hardcoded here.
+ *
+ * They live in the settings table precisely so a price change is one SQL
+ * statement. Hardcoding "Rs.50" into a button would leave this screen
+ * confidently stating the wrong price until someone remembered to edit it.
  */
 type PassFees = { uaiFeeInr: number; guestFeeInr: number };
 
@@ -31,8 +32,6 @@ export function StepChoosePath({
   useEffect(() => {
     apiGet<PassFees>("/api/me/pass-status")
       .then((res) => setFees({ uaiFeeInr: res.uaiFeeInr, guestFeeInr: res.guestFeeInr }))
-      // Silent on purpose. The fee line is useful, but a failed fetch must not
-      // block someone from choosing how they are attending.
       .catch(() => setFees(null));
   }, []);
 
@@ -53,11 +52,6 @@ export function StepChoosePath({
         >
           <strong>UAI STUDENT</strong>
           <span>Verify with your university email.</span>
-          {fees && (
-            <span style={{ color: "var(--cyan)", fontSize: "0.78rem" }}>
-              Rs.{fees.uaiFeeInr} festival pass — both days, food, DJ night
-            </span>
-          )}
         </button>
         <button
           type="button"
@@ -66,11 +60,6 @@ export function StepChoosePath({
         >
           <strong>GUEST</strong>
           <span>Join from another college.</span>
-          {fees && (
-            <span style={{ color: "var(--cyan)", fontSize: "0.78rem" }}>
-              Rs.{fees.guestFeeInr} festival pass — both days, food, DJ night
-            </span>
-          )}
         </button>
       </div>
       {error && <p className="auth-error">{error}</p>}

@@ -47,12 +47,14 @@ export async function GET(req: Request) {
 
     const headers = [
       "Registration ID", "Club", "Event", "Name", "Email", "Phone",
+      "UTR / Bank Ref", "Payer Ref",
       "College", "Year", "UAI Student", "Amount (INR)",
       "Payment", "Status", "Checked In", "Registered At",
     ];
 
     const rows = (data ?? []).map((r: Record<string, unknown>) => [
       r.registration_id, r.club_id, r.event_name, r.attendee_name, r.email, r.phone,
+      r.acquirer_ref ?? "", r.payer_ref ?? "",
       r.college, r.year_of_study, r.is_uai ? "Yes" : "No", r.amount_inr,
       r.payment_status, r.status,
       r.checked_in_at ? new Date(String(r.checked_in_at)).toLocaleString("en-IN") : "",

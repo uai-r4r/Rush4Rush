@@ -98,8 +98,7 @@ export function StepVerify({
 
       {path === "guest" && !sent && (
         <p className="auth-hint">
-          Guests pay a Rs.100 festival entry pass — added when you enrol for your
-          first event.
+        
         </p>
       )}
 

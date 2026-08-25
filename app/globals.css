@@ -3711,7 +3711,7 @@ body:has([role="dialog"]) .role-switcher {
 .modal-image {
   background: #fff;
 }
-=======
+
 .bulk-bar {
   display: flex; align-items: center; justify-content: space-between;
   gap: 16px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 12px;
