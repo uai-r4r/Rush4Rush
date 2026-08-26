@@ -6,30 +6,28 @@ export const runtime = "nodejs";
 /**
  * GET /api/events/:id/team-pricing
  *
- * What each allowed team size costs for this event, so the picker can label
- * its buttons "3 · Rs.350" instead of a bare "3". Someone choosing a size is
- * choosing a price, and a button that hides the price makes them guess.
+ * The sizes a club actually offers, with their prices.
  *
- * Prices come from team_fee(), the same function the server uses when it
- * actually charges — so the label and the invoice cannot disagree. A club that
- * has not filled in event_team_pricing falls back to the event's flat fee for
- * every size, which is correct: one fee regardless of head count.
+ * Deliberately NOT a min..max range. A club may offer solo, duo and four but
+ * not three — a contiguous picker would show 3, and picking it would fall
+ * through to the flat event fee and charge the wrong amount. Returning the
+ * priced rows means the picker can only offer sizes that have a price.
  *
- * The entry pass is NOT included here. It depends on the person, not the team,
- * and gets added by quote() at checkout.
+ * Falls back to the min..max range where a club has set no per-size rows at
+ * all, since those events charge one flat fee whatever the size.
  */
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id: eventId } = await params;
+    const { id } = await params;
     const admin = createAdminClient();
 
     const { data: event, error } = await admin
       .from("events")
-      .select("id, min_team_size, max_team_size")
-      .eq("id", eventId)
+      .select("id, name, fee_inr, min_team_size, max_team_size")
+      .eq("id", id)
       .eq("is_published", true)
       .maybeSingle();
 
@@ -38,25 +36,32 @@ export async function GET(
       throw Object.assign(new Error("Event not found"), { status: 404 });
     }
 
-    const min = Math.max(event.min_team_size ?? 1, 1);
+    const min = event.min_team_size ?? 1;
     const max = event.max_team_size ?? 1;
 
-    if (max <= 1) {
-      // Solo event — nothing to pick between.
-      return ok({ eventId, sizes: [] });
-    }
+    const { data: priced } = await admin
+      .from("event_team_pricing")
+      .select("team_size, fee_inr")
+      .eq("event_id", id)
+      .order("team_size");
 
-    const sizes = await Promise.all(
-      Array.from({ length: max - min + 1 }, (_, i) => min + i).map(async (size) => {
-        const { data: fee } = await admin.rpc("team_fee", {
-          p_event_id: eventId,
-          p_size: size,
-        });
-        return { size, feeInr: typeof fee === "number" ? fee : 0 };
-      }),
-    );
+    const rows = (priced ?? []).filter((r) => r.team_size >= min && r.team_size <= max);
 
-    return ok({ eventId, sizes });
+    const options =
+      rows.length > 0
+        ? rows.map((r) => ({ size: r.team_size, feeInr: r.fee_inr }))
+        : Array.from({ length: max - min + 1 }, (_, i) => ({
+            size: min + i,
+            feeInr: event.fee_inr,
+          }));
+
+    return ok({
+      eventId: event.id,
+      isTeam: max > 1,
+      minTeamSize: min,
+      maxTeamSize: max,
+      options,
+    });
   } catch (err) {
     return handleError(err);
   }

@@ -35,8 +35,17 @@ type PassStatus = {
  * before they commit) and for anyone who abandoned signup before paying.
  */
 function passNote(pass: PassStatus | null): string | null {
+  if (!pass) return null;
+
+  if (pass.hasPass || pass.isOrganiser) return null;
+
+  if (!pass.signedIn) {
+    // Intentionally do nothing
+  }
+
   return null;
 }
+
 type ClubEvent = {
   id: string;
   eventName: string;
@@ -53,6 +62,8 @@ type ClubEvent = {
   teamSize: string;
   minTeamSize: number;
   maxTeamSize: number;
+  /** Set when a club prices sizes differently — card then shows "From Rs.X". */
+  feeFrom: number | null;
 };
 
 type Category = (typeof categories)[number];
@@ -146,7 +157,15 @@ function EventModal({
           </div>
           <div>
             <span>Entry</span>
-            <strong>Rs. {event.fee}</strong>
+            {/* Range where the club prices sizes differently — a single figure
+                would contradict the size picker on the next screen. */}
+            <strong>
+              {event.feeFrom !== null
+                ? `From Rs. ${event.feeFrom}`
+                : event.fee === 0
+                  ? "Free"
+                  : `Rs. ${event.fee}`}
+            </strong>
           </div>
         </div>
         <button
@@ -154,7 +173,7 @@ function EventModal({
           type="button"
           onClick={() => onEnroll(event)}
         >
-          Enroll — Rs.{event.fee}
+          Enroll
         </button>
       </div>
     </div>
@@ -185,7 +204,13 @@ function EventCard({
       <h2>{event.eventName}</h2>
       <p className="event-club">{event.club}</p>
       <div className="event-card-meta">
-        <span>{event.fee === 0 ? "Free" : `Rs. ${event.fee}`}</span>
+        <span>
+          {event.feeFrom !== null
+            ? `From Rs. ${event.feeFrom}`
+            : event.fee === 0
+              ? "Free"
+              : `Rs. ${event.fee}`}
+        </span>
         <span>{event.teamSize}</span>
       </div>
       {passNote(pass) && <p className="pass-note">{passNote(pass)}</p>}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { apiPost, apiUpload } from "@/lib/api-client";
+import { apiGet, apiPost, apiUpload } from "@/lib/api-client";
 import { CustomListbox } from "@/components/custom-listbox";
 import type { EnrollmentIntent } from "@/components/auth-provider";
 
@@ -84,6 +84,28 @@ export function EnrollModal({
   // Defaults to the event's minimum, so a 2..4 event opens on 2 rather than
   // making the leader think about it.
   const [teamSize, setTeamSize] = useState(Math.max(1, intent.minTeamSize ?? 1));
+  /**
+   * Sizes come from the server, not from a min..max range.
+   *
+   * A club may offer solo, duo and four but not three. A contiguous picker
+   * would show 3, and picking it would fall through to the flat event fee and
+   * charge the wrong amount. Only sizes that have a price are offered.
+   */
+  const [sizeOptions, setSizeOptions] = useState<{ size: number; feeInr: number }[] | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if ((intent.maxTeamSize ?? 1) <= 1) return;
+    apiGet<{ options: { size: number; feeInr: number }[] }>(
+      `/api/events/${encodeURIComponent(intent.eventId)}/team-pricing`,
+    )
+      .then((res) => {
+        setSizeOptions(res.options);
+        if (res.options.length > 0) setTeamSize(res.options[0].size);
+      })
+      .catch(() => setSizeOptions(null));
+  }, [intent.eventId, intent.maxTeamSize]);
   // Inline profile completion — see the 409 branch in startEnrollment().
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -258,20 +280,21 @@ export function EnrollModal({
                 <label className="auth-field">
                   <span>TEAM SIZE</span>
                   <div className="team-size-picker">
-                    {Array.from(
-                      { length: (intent.maxTeamSize ?? 1) - (intent.minTeamSize ?? 1) + 1 },
-                      (_, i) => (intent.minTeamSize ?? 1) + i,
-                    ).map((n) => (
+                    {(sizeOptions ?? []).map((opt) => (
                       <button
-                        key={n}
+                        key={opt.size}
                         type="button"
-                        className={teamSize === n ? "is-active" : ""}
-                        onClick={() => setTeamSize(n)}
-                        aria-pressed={teamSize === n}
+                        className={teamSize === opt.size ? "is-active" : ""}
+                        onClick={() => setTeamSize(opt.size)}
+                        aria-pressed={teamSize === opt.size}
                       >
-                        {n}
+                        {/* Price on the button — otherwise people pick blind
+                            and only discover the cost on the next screen. */}
+                        <strong>{opt.size === 1 ? "Solo" : `${opt.size} people`}</strong>
+                        <span>Rs.{opt.feeInr}</span>
                       </button>
                     ))}
+                    {sizeOptions === null && <span className="auth-hint">Loading sizes…</span>}
                   </div>
                 </label>
                 <p className="auth-hint">
