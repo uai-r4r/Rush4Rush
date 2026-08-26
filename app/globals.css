@@ -1106,7 +1106,7 @@ button {
      clipped by .festival-page's overflow:hidden, so only "R4" showed and it
      read as broken rather than intentional. Centred and sized to fit whole. */
   .outline-art {
-    bottom: 7%;
+    bottom: 27%;
     font-size: 40vw;
     left: 0;
     opacity: 0.3;
@@ -1710,7 +1710,7 @@ body.menu-open {
   }
 
   .page-art {
-    display: none;
+    display: block;
     left: 0;
     right: 0;
   }
@@ -1814,18 +1814,33 @@ body.menu-open {
   z-index: 2;
 }
 @media (max-width: 700px) {
+  /* Sized per word so each fits the viewport whole. These are nowrap inside
+     a page with overflow:hidden, and art-rise rotates them -9deg, which adds
+     width again — anything over ~80vw gets sliced at the edge.
+     The animation is replaced with a static end state here so the opacity
+     can be dropped: at 0.86 the wordmark fought the eyebrow badge it sits
+     behind on a narrow screen. */
   .page-art {
-    top: 8.5rem;
-    font-size: clamp(4.5rem, 30vw, 9rem);
+    animation: none;
+    font-size: clamp(3rem, 19vw, 7rem);
+    opacity: 0.5;
+    padding-inline: 1.25rem;
+    top: 6rem;
+    transform: rotate(-9deg);
+  }
+  /* Needs its own rule: [data-word] beats a bare .page-art on specificity,
+     so without this EVENTS keeps its desktop size and runs off the screen. */
+  .page-art[data-word="EVENTS"] {
+    font-size: clamp(2.8rem, 17vw, 6rem);
   }
   .page-art[data-word="SCHEDULE"] {
-    font-size: clamp(3rem, 21vw, 6rem);
+    font-size: clamp(2.2rem, 14vw, 5rem);
   }
   .page-art[data-word="ABOUT"] {
-    font-size: clamp(5rem, 34vw, 10rem);
+    font-size: clamp(3.4rem, 22vw, 8rem);
   }
   .page-art[data-word="MAPS"] {
-    font-size: clamp(6rem, 42vw, 12rem);
+    font-size: clamp(4.2rem, 28vw, 9rem);
   }
 }
 @media (prefers-reduced-motion: reduce) {
