@@ -101,7 +101,7 @@ export default function Page() {
             </h1>
             <div className="hero-summary">
               <p>
-                4th & 5th August. 21 clubs. 20 events. 1 unforgettable weekend. Plug into the digital rave and
+                4th & 5th September. 21 clubs. 20 events. 1 unforgettable weekend. Plug into the digital rave and
                 experience the most kinetic campus event of the year.
               </p>
             </div>
