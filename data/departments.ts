@@ -9,7 +9,7 @@ export const photos: Record<string, string> = {
   "Amrita Mathews": "/team/Amrita_Mathews.jpg",
   "Dakshi Gala": "/team/Dakshi_Gala.jpg",
   "Vratika Jain": "/team/Vratika_Jain.jpg",
-  Yashita: "/team/Yashika.jpg",
+  Yashika: "/team/Yashika.jpg",
   "Satvik Kochar": "/team/Satvik_Kochar.jpeg",
   "Raman Singh": "/team/Raman_Singh.jpeg",
   "Parthiv Raj": "/team/Parthiv_Raj.jpg",
@@ -81,7 +81,7 @@ export const departments: Department[] = [
   },
   { name: "Event", leaders: ["Pearl Choudhary"], members: ["Yash Goutam","Harshit Panjwani","Mahak Dhamecha"] },
 
-  { name: "Anchoring", leaders: ["Mohi Jain"], members: [""] },
+  { name: "Anchoring", leaders: ["Yashika"], members: [""] },
 
 ];
   
