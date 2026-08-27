@@ -82,8 +82,8 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
    * nothing to chase. "Needs review" shows only submissions with actual proof,
    * which is what a club admin is here to act on.
    */
-  const [view, setView] = useState<"Needs review" | "All" | "Confirmed" | "Abandoned">(
-    "Needs review",
+  const [view, setView] = useState<"All" | "Needs review" | "Confirmed" | "Abandoned">(
+    "All",
   );
   const [proof, setProof] = useState<Row | null>(null);
   // UPI screenshots are often photographed off a second phone, so the UTR and
@@ -351,7 +351,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
         <CustomListbox
           value={view}
           onChange={(v) => setView(v as typeof view)}
-          options={["Needs review", "All", "Confirmed", "Abandoned"]}
+          options={["All", "Needs review", "Confirmed", "Abandoned"]}
           ariaLabel="Filter by status"
         />
         <CustomListbox

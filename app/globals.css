@@ -4026,3 +4026,39 @@ body::after {
   position: absolute;
   right: 0.75rem;
 }
+/* ---- custom listbox: stop labels wrapping out of the box ----
+   .listbox-options was pinned left:0 right:0, so the panel could never be
+   wider than its trigger. "Needs review" and "Ethics & CSR" wrapped to two
+   lines; the club list (21 entries) ran the full height of the page with no
+   scroll of its own. */
+   .listbox-options {
+    max-height: 17rem;
+    max-width: min(22rem, 90vw);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    right: auto;
+    width: max-content;
+    min-width: 100%;
+  }
+  .listbox-option {
+    gap: 0.75rem;
+    white-space: nowrap;
+  }
+  /* Trigger label truncates rather than shoving the chevron out of the box. */
+  .listbox-trigger {
+    gap: 0.6rem;
+  }
+  .listbox-trigger > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .listbox-chevron {
+    flex: 0 0 auto;
+  }
+  /* Near the right edge of the toolbar a max-content panel would run off
+     screen, so the last control opens right-aligned instead. */
+  .dashboard-toolbar > .custom-listbox:last-child .listbox-options {
+    left: auto;
+    right: 0;
+  }
