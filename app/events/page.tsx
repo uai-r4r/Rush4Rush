@@ -36,14 +36,11 @@ type PassStatus = {
  */
 function passNote(pass: PassStatus | null): string | null {
   if (!pass) return null;
-
   if (pass.hasPass || pass.isOrganiser) return null;
-
   if (!pass.signedIn) {
-    // Intentionally do nothing
+    return `Plus the festival pass, required to attend — Rs.${pass.uaiFeeInr} UAI students / Rs.${pass.guestFeeInr} guests`;
   }
-
-  return null;
+  return `You still need the Rs.${pass.entryFeeInr} festival pass to attend`;
 }
 
 type ClubEvent = {
@@ -64,7 +61,19 @@ type ClubEvent = {
   maxTeamSize: number;
   /** Set when a club prices sizes differently — card then shows "From Rs.X". */
   feeFrom: number | null;
+  spansBothDays: boolean;
 };
+
+/**
+ * "Day 1", or "Day 1-2" for events running across both.
+ *
+ * One helper rather than the same conditional in three places — a two-day
+ * event mislabelled as Day 1 means people turn up once for something that
+ * needed them twice.
+ */
+function dayLabel(event: ClubEvent): string {
+  return event.spansBothDays ? "Day 1-2" : `Day ${event.day}`;
+}
 
 type Category = (typeof categories)[number];
 
@@ -135,7 +144,7 @@ function EventModal({
         >
           ×
         </button>
-        <p className="eyebrow">Event brief // day {event.day}</p>
+        <p className="eyebrow">Event brief // {dayLabel(event).toLowerCase()}</p>
         <p className="event-category">{event.category}</p>
         <h2 id="event-modal-title">{event.eventName}</h2>
         <p className="event-modal-club">Hosted by {event.club}</p>
@@ -144,7 +153,7 @@ function EventModal({
           <div>
             <span>Schedule</span>
             <strong>
-              Day {event.day}, {event.startTime}–{event.endTime}
+              {dayLabel(event)}, {event.startTime}–{event.endTime}
             </strong>
           </div>
           <div>
@@ -199,7 +208,7 @@ function EventCard({
     >
       <div className="event-card-top">
         <span className="event-category">{event.category}</span>
-        <span className="event-day">Day {event.day}</span>
+        <span className="event-day">{dayLabel(event)}</span>
       </div>
       <h2>{event.eventName}</h2>
       <p className="event-club">{event.club}</p>
