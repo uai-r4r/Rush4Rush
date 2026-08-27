@@ -27,6 +27,8 @@ export const posters: Record<string, string> = {
   "uic-boardroom-battle": "/posters/uic-boardroom-battle.png",
   "vibe-tribe-sa-re-ga-ma": "/posters/vibe-tribe-sa-re-ga-ma.jpg",
   "zalent-icon": "/posters/zalent-icon.jpeg",
+  "sports-side-futsal" : "/posters/sports-side-futsal.webp",
+  "environment-final-truth" : "environment-final-truth.jpg",
 
   // Waiting on artwork — no file in public/posters/ yet:
   // "arts-naach-baraati": "/posters/arts-naach-baraati.png",
