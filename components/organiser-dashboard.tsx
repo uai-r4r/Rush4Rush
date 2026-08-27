@@ -34,6 +34,8 @@ type Row = {
   payment_status: string;
   payment_method: string;
   proof_path: string | null;
+  acquirer_ref: string | null;
+  payer_ref: string | null;
   status: string;
   checked_in_at: string | null;
   registered_at: string;
@@ -71,6 +73,18 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
   const [eventFilter, setEventFilter] = useState("All events");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"Newest" | "Name" | "Status" | "Amount">("Newest");
+  /**
+   * Default view hides abandoned checkouts.
+   *
+   * create_checkout writes the registration when someone clicks Continue —
+   * before they pay — so anyone who closes the tab leaves a pending row with
+   * no UTR and no screenshot. Those are noise: there is nothing to approve and
+   * nothing to chase. "Needs review" shows only submissions with actual proof,
+   * which is what a club admin is here to act on.
+   */
+  const [view, setView] = useState<"Needs review" | "All" | "Confirmed" | "Abandoned">(
+    "Needs review",
+  );
   const [proof, setProof] = useState<Row | null>(null);
   // UPI screenshots are often photographed off a second phone, so the UTR and
   // the amount can be unreadable at modal size. This opens the full image.
@@ -130,6 +144,18 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
     const needle = query.trim().toLowerCase();
     return rows
       .filter((row) => {
+        const submitted = Boolean(row.proof_path) || Boolean(row.payer_ref);
+
+        if (view === "Needs review") {
+          // Awaiting a decision AND they actually submitted something.
+          if (row.payment_status !== "pending_review" || !submitted) return false;
+        } else if (view === "Confirmed") {
+          if (row.status !== "confirmed") return false;
+        } else if (view === "Abandoned") {
+          // Started checkout, never submitted proof.
+          if (row.status === "confirmed" || submitted) return false;
+        }
+
         if (eventFilter !== "All events" && row.event_name !== eventFilter) return false;
         if (!needle) return true;
         return `${row.attendee_name ?? ""} ${row.email} ${row.phone ?? ""} ${row.registration_id}`
@@ -148,7 +174,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
             return b.registered_at.localeCompare(a.registered_at);
         }
       });
-  }, [rows, eventFilter, query, sort]);
+  }, [rows, eventFilter, query, sort, view]);
 
   /**
    * Approve or reject a UPI payment. Approving flips every registration on
@@ -227,7 +253,12 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
       total: rows.length,
       paid: rows.filter((r) => r.status === "confirmed").length,
       checkedIn: rows.filter((r) => r.checked_in_at).length,
-      pending: rows.filter((r) => r.status === "pending").length,
+      // Only counts people who actually submitted something — an abandoned
+      // checkout is not work waiting for anyone.
+      pending: rows.filter(
+        (r) =>
+          r.payment_status === "pending_review" && (r.proof_path || r.payer_ref),
+      ).length,
       collected: rows
         .filter((r) => r.payment_status === "paid")
         .reduce((sum, r) => sum + r.amount_inr, 0),
@@ -293,7 +324,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
           <strong>{stats.checkedIn}</strong>
         </div>
         <div>
-          <span>Pending review</span>
+          <span>Awaiting review</span>
           <strong>{stats.pending}</strong>
         </div>
         <div>
@@ -317,6 +348,12 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
             ariaLabel="Filter by club"
           />
         )}
+        <CustomListbox
+          value={view}
+          onChange={(v) => setView(v as typeof view)}
+          options={["Needs review", "All", "Confirmed", "Abandoned"]}
+          ariaLabel="Filter by status"
+        />
         <CustomListbox
           value={eventFilter}
           onChange={setEventFilter}
