@@ -35,11 +35,7 @@ export function AuthModal({
   }, [onClose]);
 
   return (
-    <div
-      className="auth-backdrop"
-      role="presentation"
-      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
-    >
+    <div className="auth-backdrop" role="presentation">
       <section className="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
         <button className="auth-close" onClick={onClose} aria-label="Close authentication">
           ×

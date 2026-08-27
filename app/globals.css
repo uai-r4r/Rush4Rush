@@ -1924,6 +1924,8 @@ body.menu-open {
     var(--cyan) 45%,
     var(--violet)
   );
+  display: flex;
+  flex-direction: column;
   max-height: 90dvh;
   max-width: 560px;
   overscroll-behavior: contain;
@@ -1933,7 +1935,10 @@ body.menu-open {
 }
 .auth-panel {
   background: var(--elevated);
+  min-height: 0;
+  overflow-y: auto;
   padding: clamp(2rem, 6vw, 4rem);
+  -webkit-overflow-scrolling: touch;
 }
 .auth-close {
   background: none;

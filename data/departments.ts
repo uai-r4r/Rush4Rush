@@ -26,7 +26,12 @@ export const photos: Record<string, string> = {
   "Ratnadeep Patil": "/team/Ratnadeep_Patil.webp",
   Mandvi: "/team/Mandvi_Singh_Baghel.jpg",
   "Mahi Vashisht": "/team/Mahi_Vashisht.jpg",
+  "Harshita Kumar": "/team/Harshita_Kumar.jpg",
 };
+
+export const deanSom: { role: string; name: string }[] = [
+  { role: "Advisor to the event", name: "Harshita Kumar" },
+];
 
 export const higherAuthority: { role: string; name: string }[] = [
   { role: "R4R Annual Event Head", name: "Amrita Mathews" },
@@ -84,4 +89,3 @@ export const departments: Department[] = [
   { name: "Anchoring", leaders: ["Yashika"], members: [""] },
 
 ];
-  
