@@ -4008,3 +4008,21 @@ body::after {
     order: 10;
   }
 }
+/* Payment proof zoom — sits above the proof modal (430), so 450. */
+.proof-zoom {
+  z-index: 450;
+}
+.proof-image-button {
+  background: none;
+  border: 0;
+  cursor: zoom-in;
+  display: block;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+.proof-image-button .map-zoom-badge {
+  bottom: 0.75rem;
+  position: absolute;
+  right: 0.75rem;
+}
