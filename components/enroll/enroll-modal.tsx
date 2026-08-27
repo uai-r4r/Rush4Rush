@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { apiGet, apiPost, apiUpload } from "@/lib/api-client";
+import { compressImage, formatBytes } from "@/lib/compress-image";
 import { CustomListbox } from "@/components/custom-listbox";
 import type { EnrollmentIntent } from "@/components/auth-provider";
 
@@ -80,6 +81,8 @@ export function EnrollModal({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<EnrollResponse | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [shrinking, setShrinking] = useState(false);
+  const [sizeNote, setSizeNote] = useState<string | null>(null);
   const [payerRef, setPayerRef] = useState("");
   // Defaults to the event's minimum, so a 2..4 event opens on 2 rather than
   // making the leader think about it.
@@ -475,7 +478,25 @@ export function EnrollModal({
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                onChange={async (e) => {
+                  const picked = e.target.files?.[0] ?? null;
+                  if (!picked) {
+                    setFile(null);
+                    setSizeNote(null);
+                    return;
+                  }
+                  // Compress before upload: a 3 MB screenshot over fest wifi
+                  // times out where 150 KB goes through.
+                  setShrinking(true);
+                  const smaller = await compressImage(picked);
+                  setFile(smaller);
+                  setSizeNote(
+                    smaller.size < picked.size
+                      ? `${formatBytes(picked.size)} → ${formatBytes(smaller.size)}`
+                      : formatBytes(picked.size),
+                  );
+                  setShrinking(false);
+                }}
               />
             </label>
 
@@ -487,7 +508,7 @@ export function EnrollModal({
               disabled={!file || payerRef.replace(/\D/g, "").length < 6 || uploading}
               onClick={submitProof}
             >
-              {uploading ? "UPLOADING…" : "SUBMIT PAYMENT"}
+              {shrinking ? "PREPARING…" : uploading ? "UPLOADING…" : "SUBMIT PAYMENT"}
             </button>
             <p className="auth-hint">
               A club organiser will verify it — your ticket appears once approved.
