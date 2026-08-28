@@ -15,20 +15,28 @@
  */
 export const posters: Record<string, string> = {
   "analytica-bidding-wars": "/posters/analytica-bidding-wars.jpg",
-  "arts-uai-got-latent": "/posters/arts-uai-got-latent.png",
+  "arts-uai-got-latent": "/posters/arts-uai-got-latent.webp",
+  "arts-naach-baraati" : "/posters/arts-naach-baraati.webp",
   "elc-campus-roadies": "/posters/elc-campus-roadies.jpg",
-  "enactus-go-viral": "/posters/enactus-go-viral.png",
+  "enactus-go-viral": "/posters/enactus-go-viral.webp",
   "ethics-treasure-hunt": "/posters/ethics-treasure-hunt.jpeg",
   // The database id carries a -day-1 suffix; the file does not.
-  "evac-fashion-show-day-1": "/posters/evac-fashion-show.png",
-  "finx-venture-league": "/posters/finx-venture-league.png",
-  "metamorphosis-naach-le-yaar": "/posters/metamorphosis-naach-le-yaar.png",
+  "evac-fashion-show-day-1": "/posters/evac-fashion-show.webp",
+  "finx-venture-league": "/posters/finx-venture-league.webp",
+  "metamorphosis-naach-le-yaar": "/posters/metamorphosis-naach-le-yaar.webp",
   "robotics-gameforge": "/posters/robotics-gameforge.jpg",
-  "uic-boardroom-battle": "/posters/uic-boardroom-battle.png",
+  "uic-boardroom-battle": "/posters/uic-boardroom-battle.webp",
   "vibe-tribe-sa-re-ga-ma": "/posters/vibe-tribe-sa-re-ga-ma.jpg",
   "zalent-icon": "/posters/zalent-icon.jpeg",
   "sports-side-futsal" : "/posters/sports-side-futsal.webp",
-  "environment-final-truth" : "environment-final-truth.jpg",
+  "environment-final-truth" : "/posters/environment-final-truth.jpg",
+  "alumni-business-quiz" : "/posters/alumni-business-quiz.webp",
+  "dramatics-techops-level-up" : "/posters/dramatics-techops-level-up.webp",
+  "equinoxxx-hr-bollywood-object-beats" : "/posters/equinoxxx-hr-bollywood-object-beats.webp",
+  "matchbox-project-x" : "/posters/matchbox-project-x.webp",
+  "rotaract-traitors" : "/posters/rotaract-traitors.webp",
+
+
 
   // Waiting on artwork — no file in public/posters/ yet:
   // "arts-naach-baraati": "/posters/arts-naach-baraati.png",

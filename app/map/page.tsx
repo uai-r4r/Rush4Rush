@@ -9,19 +9,19 @@ const maps: CampusMap[] = [
   {
     id: "ground",
     label: "Ground Floor",
-    src: "/map/ground-floor.png",
+    src: "/map/ground-floor.webp",
     alt: "Floor plan of the ground floor showing festival venues and facilities",
   },
   {
     id: "first",
     label: "First Floor",
-    src: "/map/first-floor.png",
+    src: "/map/first-floor.webp",
     alt: "Floor plan of the first floor showing festival venues and facilities",
   },
   {
     id: "second",
     label: "Second Floor",
-    src: "/map/second-floor.png",
+    src: "/map/second-floor.webp",
     alt: "Floor plan of the second floor showing festival venues and facilities",
   },
 ];
