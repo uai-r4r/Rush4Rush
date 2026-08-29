@@ -23,7 +23,7 @@ export async function GET() {
     const { data, error } = await admin
       .from("events_with_clubs")
       .select(
-        "id, name, tagline, description, fee_inr, day, start_time, end_time, venue, category, team_size, club_names, is_entry_pass, min_team_size, max_team_size, spans_both_days",
+        "id, name, tagline, description, fee_inr, day, start_time, end_time, venue, category, team_size, club_names, is_entry_pass, min_team_size, max_team_size, spans_both_days, is_showcase",
       )
       .eq("is_published", true)
       .eq("is_entry_pass", false)
@@ -65,6 +65,8 @@ export async function GET() {
         // True for events running across both days. `day` stays 1 so schedule
         // ordering works; this is what the label reads.
         spansBothDays: Boolean(e.spans_both_days),
+        // Open performance — card shows, but no enrol button.
+        isShowcase: Boolean(e.is_showcase),
         startTime: (e.start_time ?? "").slice(0, 5),
         endTime: (e.end_time ?? "").slice(0, 5),
         venue: e.venue ?? "TBC",

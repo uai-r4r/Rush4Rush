@@ -63,7 +63,7 @@ export async function quote(params: {
 
   const { data: events, error } = await admin
     .from("events")
-    .select("id, name, club_id, fee_inr, is_published, capacity, max_team_size")
+    .select("id, name, club_id, fee_inr, is_published, capacity, max_team_size, is_showcase")
     .in("id", requested)
     .eq("is_published", true);
 
@@ -73,6 +73,20 @@ export async function quote(params: {
     throw Object.assign(new Error("One or more events are unavailable"), {
       status: 400,
     });
+  }
+
+  /**
+   * Showcase events are open performances with nothing to sign up for.
+   * Refused here as well as hidden in the UI — a hidden button is cosmetic,
+   * and issuing a ticket for something that has no tickets would confuse both
+   * the attendee and the club.
+   */
+  const showcase = events.find((e) => e.is_showcase);
+  if (showcase) {
+    throw Object.assign(
+      new Error(`${showcase.name} is open to everyone — no registration needed.`),
+      { status: 400, code: "SHOWCASE_EVENT" },
+    );
   }
 
   for (const ev of events) {
