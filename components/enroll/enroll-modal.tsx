@@ -311,9 +311,24 @@ export function EnrollModal({
                 pass if you still need one.
               </p>
             )}
-            <button className="button button-primary" type="button" onClick={startEnrollment}>
-              CONTINUE
-            </button>
+            {/*
+  Disabled until the team sizes have loaded.
+
+  teamSize defaults to the minimum, so someone clicking Continue before the
+  buttons render would be charged the smallest size without ever seeing that
+  there was a choice — and their team code would then admit fewer people than
+  they wanted.
+*/}
+<button
+  className="button button-primary"
+  type="button"
+  disabled={(intent.maxTeamSize ?? 1) > 1 && sizeOptions === null}
+  onClick={startEnrollment}
+>
+  {(intent.maxTeamSize ?? 1) > 1 && sizeOptions === null
+    ? "LOADING SIZES…"
+    : "CONTINUE"}
+</button>
           </>
         )}
 

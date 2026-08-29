@@ -82,7 +82,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
    * nothing to chase. "Needs review" shows only submissions with actual proof,
    * which is what a club admin is here to act on.
    */
-  const [view, setView] = useState<"Needs review" | "All" | "Confirmed" | "Abandoned">(
+    const [view, setView] = useState<"Needs review" | "All" | "Confirmed">(
     "Needs review",
   );
   const [proof, setProof] = useState<Row | null>(null);
@@ -121,17 +121,23 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return rows
-      .filter((row) => {
+            .filter((row) => {
+        /**
+         * Abandoned checkouts never appear, in any view.
+         *
+         * create_checkout writes the registration when someone clicks Continue
+         * — before they pay — so anyone who opened the UPI QR and left leaves a
+         * pending row with no UTR and no screenshot. There is nothing to
+         * approve and nobody to chase, and showing them means an organiser can
+         * approve a payment that never happened.
+         */
         const submitted = Boolean(row.proof_path) || Boolean(row.payer_ref);
+        if (!submitted && row.status !== "confirmed") return false;
 
         if (view === "Needs review") {
-          // Awaiting a decision AND they actually submitted something.
-          if (row.payment_status !== "pending_review" || !submitted) return false;
+          if (row.payment_status !== "pending_review") return false;
         } else if (view === "Confirmed") {
           if (row.status !== "confirmed") return false;
-        } else if (view === "Abandoned") {
-          // Started checkout, never submitted proof.
-          if (row.status === "confirmed" || submitted) return false;
         }
 
         if (eventFilter !== "All events" && row.event_name !== eventFilter) return false;
@@ -327,7 +333,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
         <CustomListbox
           value={view}
           onChange={(v) => setView(v as typeof view)}
-          options={["Needs review", "All", "Confirmed", "Abandoned"]}
+                   options={["Needs review", "All", "Confirmed"]}
           ariaLabel="Filter by status"
         />
         <CustomListbox

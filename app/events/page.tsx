@@ -34,7 +34,14 @@ type PassStatus = {
  * It still shows for people browsing logged out (so the total cost is honest
  * before they commit) and for anyone who abandoned signup before paying.
  */
-
+function passNote(pass: PassStatus | null): string | null {
+  if (!pass) return null;
+  if (pass.hasPass || pass.isOrganiser) return null;
+  if (!pass.signedIn) {
+    return `Plus the festival pass, required to attend — Rs.${pass.uaiFeeInr} UAI students / Rs.${pass.guestFeeInr} guests`;
+  }
+  return `You still need the Rs.${pass.entryFeeInr} festival pass to attend`;
+}
 
 type ClubEvent = {
   id: string;
@@ -55,6 +62,7 @@ type ClubEvent = {
   /** Set when a club prices sizes differently — card then shows "From Rs.X". */
   feeFrom: number | null;
   spansBothDays: boolean;
+  isShowcase: boolean;
 };
 
 /**
@@ -170,13 +178,19 @@ function EventModal({
             </strong>
           </div>
         </div>
-        <button
-          className="button button-primary event-enroll"
-          type="button"
-          onClick={() => onEnroll(event)}
-        >
-          Enroll
-        </button>
+        {event.isShowcase ? (
+          <p className="showcase-note">
+            Open to everyone — just turn up. No registration needed.
+          </p>
+        ) : (
+          <button
+            className="button button-primary event-enroll"
+            type="button"
+            onClick={() => onEnroll(event)}
+          >
+            Enroll
+          </button>
+        )}
       </div>
     </div>
   );
@@ -215,7 +229,7 @@ function EventCard({
         </span>
         <span>{event.teamSize}</span>
       </div>
-    
+      {passNote(pass) && <p className="pass-note">{passNote(pass)}</p>}
     </button>
   );
 }
