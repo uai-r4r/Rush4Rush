@@ -427,7 +427,10 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
               <tbody>
                 {filtered.map((row) => {
                   const state = displayStatus(row);
-                  const awaiting = row.payment_status === "pending_review";
+                  
+const awaiting =
+  row.payment_status === "pending_review" &&
+  Boolean(row.proof_path || row.payer_ref);
                   return (
                     <tr key={row.registration_id}>
                       <td>
