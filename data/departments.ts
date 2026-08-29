@@ -9,7 +9,7 @@ export const photos: Record<string, string> = {
   "Amrita Mathews": "/team/Amrita_Mathews.jpg",
   "Dakshi Gala": "/team/Dakshi_Gala.jpg",
   "Vratika Jain": "/team/Vratika_Jain.jpg",
-  Yashika: "/team/Yashika.jpg",
+  "Yashita Dhanjani": "/team/Yashika.jpg",
   "Satvik Kochar": "/team/Satvik_Kochar.jpeg",
   "Raman Singh": "/team/Raman_Singh.jpeg",
   "Parthiv Raj": "/team/Parthiv_Raj.jpg",
@@ -57,7 +57,7 @@ export const departments: Department[] = [
     leaders: ["Mahi Vashisht", "Vratika Jain"],
     members: ["Isha Verma", "Anjali Kumari", "Vansh Kohli", "Ananya Neogi", "Dimpi Khatri", "Khushi Pareek", "Riyaz Mukharjee", "Swarangi Pawar", "Adrika Gupta", "Swati Pandey"],
   },
-  { name: "Hospitality", leaders: ["Mandvi"], members: ["Kumari Sonali", "Ridhhi Bansal", "Anshika Agrawal"] },
+  { name: "Hospitality", leaders: ["Mandvi Singh Baghel"], members: ["Kumari Sonali", "Ridhhi Bansal", "Anshika Agrawal"] },
   
   {
     name: "DM",
@@ -82,10 +82,10 @@ export const departments: Department[] = [
   {
     name: "FlashMob",
     leaders: [],
-    members: ["Pearl Choudhary","Mandvi","Mohi Jian"],
+    members: ["Pearl Choudhary","Mandvi Singh Baghel","Mohi Jain"],
   },
   { name: "Event", leaders: ["Pearl Choudhary"], members: ["Yash Goutam","Harshit Panjwani","Mahak Dhamecha"] },
 
-  { name: "Anchoring", leaders: ["Yashika"], members: [""] },
+  { name: "Anchoring", leaders: ["Yashita Dhanjani"], members: [""] },
 
 ];
