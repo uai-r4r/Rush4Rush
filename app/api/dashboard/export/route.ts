@@ -12,6 +12,19 @@ export const runtime = "nodejs";
  * free tier has no automated backups, so export once signups open and keep
  * doing it. Ten seconds against losing the whole registration list.
  */
+/**
+ * Excel strips leading zeros from anything that looks like a number, so a UTR
+ * of 001234567890 opens as 1234567890 and no longer matches the bank
+ * statement. Wrapping it as ="..." makes Excel treat it as text and keep every
+ * digit.
+ *
+ * The quoting below escapes a leading = as formula injection, so this is
+ * applied via a marker the escaper leaves alone.
+ */
+function utrCell(value: string): string {
+  return value ? `\u0000EXCELTEXT:${value}` : "";
+}
+
 export async function GET(req: Request) {
   try {
     const user = await requireUser("club_admin");
@@ -47,14 +60,18 @@ export async function GET(req: Request) {
 
     const headers = [
       "Registration ID", "Club", "Event", "Name", "Email", "Phone",
-      "UTR / Bank Ref", "Payer Ref",
+      "UTR",
       "College", "Year", "UAI Student", "Amount (INR)",
       "Payment", "Status", "Checked In", "Registered At",
     ];
 
     const rows = (data ?? []).map((r: Record<string, unknown>) => [
       r.registration_id, r.club_id, r.event_name, r.attendee_name, r.email, r.phone,
-      r.acquirer_ref ?? "", r.payer_ref ?? "",
+      // One UTR column. acquirer_ref comes from Razorpay's webhook and is
+      // authoritative; payer_ref is typed by the payer on manual UPI. Only one
+      // is ever populated for a given payment, so two columns just meant one
+      // was always blank and looked broken.
+      utrCell(String(r.acquirer_ref ?? r.payer_ref ?? "")),
       r.college, r.year_of_study, r.is_uai ? "Yes" : "No", r.amount_inr,
       r.payment_status, r.status,
       r.checked_in_at ? new Date(String(r.checked_in_at)).toLocaleString("en-IN") : "",
@@ -65,7 +82,16 @@ export async function GET(req: Request) {
       .map((row) =>
         row
           .map((cell: unknown) => {
-            const s = cell == null ? "" : String(cell);
+            const raw = cell == null ? "" : String(cell);
+
+            // Deliberate ="..." wrapper — keeps leading zeros in Excel. Applied
+            // before the formula-injection guard so it is not escaped away.
+            if (raw.startsWith("\u0000EXCELTEXT:")) {
+              const value = raw.slice("\u0000EXCELTEXT:".length).replace(/"/g, '""');
+              return `"=""${value}"""`;
+            }
+
+            const s = raw;
             // Escape formula injection: a cell starting with = + - @ is executed
             // by Excel on open. Registration data ends up in spreadsheets, and
             // a name field is a perfectly good delivery vector.
