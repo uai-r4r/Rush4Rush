@@ -9,17 +9,17 @@ import { useAuth } from "@/components/auth-provider";
 
 const gallery = [
   {
-    src: "/gallery/r4r-crowd.png",
+    src: "/gallery/r4r-crowd.webp",
     alt: "Festival crowd under neon lights",
     className: "gallery-wide",
   },
   {
-    src: "/gallery/r4r-stage.png",
+    src: "/gallery/r4r-stage.webp",
     alt: "Performer on the R4R stage",
     className: "gallery-tall",
   },
   {
-    src: "/gallery/r4r-installation.png",
+    src: "/gallery/r4r-installation.webp",
     alt: "Students at a digital art installation",
     className: "gallery-mid",
   },
@@ -46,7 +46,7 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
         </button>
         <div className="modal-image">
           <Image
-            src="/merch/r4r-polo-collage.png"
+            src="/merch/r4r-polo-collage.webp"
             alt="R4R polos for all three schools"
             fill
             sizes="(max-width: 700px) 90vw, 400px"
