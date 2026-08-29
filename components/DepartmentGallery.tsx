@@ -6,6 +6,7 @@ import {
   departments,
   coreTeam,
   higherAuthority,
+  deanSom,
   photos,
   type Department,
 } from "@/data/departments";
@@ -129,6 +130,17 @@ export default function DepartmentGallery() {
 
   return (
     <>
+      <section className="about-section" aria-labelledby="dean-som-title">
+        <p className="eyebrow" id="dean-som-title">
+          Dean SOM
+        </p>
+        <div className="team-grid team-grid-core">
+          {deanSom.map((person) => (
+            <PersonCard key={person.role} name={person.name} role={person.role} />
+          ))}
+        </div>
+      </section>
+
       <section className="about-section" aria-labelledby="higher-authority-title">
         <p className="eyebrow" id="higher-authority-title">
           Higher Authority

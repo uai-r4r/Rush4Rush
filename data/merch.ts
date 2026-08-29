@@ -23,7 +23,7 @@ export const merch: MerchProduct[] = [
     sizes: ["M", "L", "XL"],
     description:
       "Black polo with orange tipping, school crest on the chest and the Rush4Rush seal across the back.",
-    image: "/merch/r4r-polo-music.png",
+    image: "/merch/r4r-polo-music.webp",
   },
   {
     id: "r4r-polo-ai",
@@ -35,7 +35,7 @@ export const merch: MerchProduct[] = [
     sizes: ["M", "L", "XL"],
     description:
       "Orange polo with the university crest on the chest and the Rush4Rush seal across the back.",
-    image: "/merch/r4r-polo-ai.png",
+    image: "/merch/r4r-polo-ai.webp",
   },
   {
     id: "r4r-polo-psych",
@@ -47,7 +47,7 @@ export const merch: MerchProduct[] = [
     sizes: ["M", "L", "XL"],
     description:
       "Royal blue polo with the university crest on the chest and the Rush4Rush seal across the back.",
-    image: "/merch/r4r-polo-psych.png",
+    image: "/merch/r4r-polo-psych.webp",
   },
 ];
 

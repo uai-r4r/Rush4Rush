@@ -86,6 +86,9 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
     "Needs review",
   );
   const [proof, setProof] = useState<Row | null>(null);
+  // UPI screenshots are often photographed off a second phone, so the UTR and
+  // the amount can be unreadable at modal size. This opens the full image.
+  const [zoomed, setZoomed] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   // Bulk selection. Manual UPI means hundreds of approvals; one at a time is
   // not a workable job for a fest weekend.
@@ -110,6 +113,25 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  /** Freeze the page behind the proof modal, and reset zoom when it closes. */
+  useEffect(() => {
+    document.body.classList.toggle("menu-open", Boolean(proof));
+    if (!proof) setZoomed(false);
+    return () => document.body.classList.remove("menu-open");
+  }, [proof]);
+
+  /** Escape steps back one layer: zoom first, then the proof modal. */
+  useEffect(() => {
+    if (!proof) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (zoomed) setZoomed(false);
+      else setProof(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [proof, zoomed]);
 
   const rows = useMemo(() => data?.registrations ?? [], [data]);
 
@@ -269,6 +291,8 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
     selectedClub === "all"
       ? "All clubs"
       : (data?.availableClubs.find((c) => c.id === selectedClub)?.name ?? "");
+
+  const proofUrl = proof ? data?.proofUrls[proof.registration_id] : undefined;
 
   return (
     <section className="organiser-dashboard">
@@ -515,11 +539,17 @@ const awaiting =
             <p className="eyebrow">PAYMENT PROOF // Rs. {proof.amount_inr}</p>
             <h2>{proof.attendee_name ?? proof.email}</h2>
             {/* Signed URL, ~5 minute life. The bucket itself stays private. */}
-            <img
-              src={data?.proofUrls[proof.registration_id]}
-              alt="Payment screenshot"
-              className="proof-image"
-            />
+            <button
+              className="proof-image-button"
+              type="button"
+              onClick={() => setZoomed(true)}
+              aria-label="Enlarge payment screenshot"
+            >
+              <img src={proofUrl} alt="Payment screenshot" className="proof-image" />
+              <span className="map-zoom-badge" aria-hidden="true">
+                ＋ Tap to zoom
+              </span>
+            </button>
             <div className="proof-actions">
               <button
                 className="button button-primary"
@@ -538,6 +568,40 @@ const awaiting =
                 Reject
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sits above the proof modal rather than inside it — .proof-modal has
+          overflow:auto, so a child could never escape its scroll box. */}
+      {proof && zoomed && (
+        <div
+          className="map-lightbox-backdrop proof-zoom"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Payment screenshot enlarged"
+          onClick={() => setZoomed(false)}
+        >
+          <button
+            className="modal-close"
+            type="button"
+            onClick={() => setZoomed(false)}
+            aria-label="Close enlarged screenshot"
+          >
+            ×
+          </button>
+          <p className="map-lightbox-hint">
+            Scroll or pinch to zoom · click anywhere to close
+          </p>
+          <div
+            className="map-lightbox-canvas"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <img
+              src={proofUrl}
+              alt="Payment screenshot"
+              className="map-lightbox-image"
+            />
           </div>
         </div>
       )}

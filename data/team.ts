@@ -24,7 +24,7 @@ export const techTeam: TeamMember[] = [
   {  
     name: "Pushpak Sarode",
     role: "Backend Engineer",
-    photo: "/team/pushpak.jpg",
+    photo: "/team/pushpak.jpeg",
     linkedin: "https://www.linkedin.com/in/pushpak-sarode-8a181936a ",
     github: " https://github.com/PUSHPAKSARODE07",
   },

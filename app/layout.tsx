@@ -8,8 +8,7 @@ import { getCurrentUser } from "@/lib/auth-server";
 export const metadata: Metadata = {
   title: "Rush4Rush // The Ultimate College Festival",
   description:
-    "21 clubs. 23 events. 1 unforgettable weekend. Rush4Rush is the most kinetic campus event of the year.",
-  generator: "v0.app",
+    "21 clubs. 20 events. 1 unforgettable weekend. Rush4Rush is the most kinetic campus event of the year.",
 };
 
 export const viewport: Viewport = {

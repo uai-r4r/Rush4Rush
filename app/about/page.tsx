@@ -42,17 +42,38 @@ function GitHubIcon() {
 }
 
 export default function AboutPage() {
-  const [status, setStatus] = useState<"idle" | "sent">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
   const [photoErrors, setPhotoErrors] = useState<Record<string, boolean>>({});
 
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+  /**
+   * Posts to /api/contact, which emails the team via Resend.
+   *
+   * Deliberately surfaces failures. The old version logged to the console and
+   * told the person their message was received either way — so anyone writing
+   * in about a sponsorship or a lost ticket got a thank-you and silence.
+   */
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(
-      "[v0] contact form submitted",
-      Object.fromEntries(new FormData(event.currentTarget)),
-    );
-    setStatus("sent");
-    event.currentTarget.reset();
+    const form = event.currentTarget;
+    setStatus("sending");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? "Could not send that message.");
+      setStatus("sent");
+      form.reset();
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(
+        err instanceof Error ? err.message : "Could not send that message.",
+      );
+    }
   };
 
   return (
@@ -106,12 +127,21 @@ export default function AboutPage() {
                 <label htmlFor="contact-message">Message</label>
                 <textarea id="contact-message" name="message" required />
               </div>
-              <button className="button button-primary" type="submit">
-                Send message
+              <button
+                className="button button-primary"
+                type="submit"
+                disabled={status === "sending"}
+              >
+                {status === "sending" ? "Sending…" : "Send message"}
               </button>
               {status === "sent" && (
                 <p className="contact-status" role="status">
                   Message received — the R4R team will reach out soon.
+                </p>
+              )}
+              {status === "error" && (
+                <p className="auth-error" role="alert">
+                  {errorMsg}
                 </p>
               )}
             </form>
@@ -119,14 +149,15 @@ export default function AboutPage() {
               <div className="contact-direct-block">
                 <p className="eyebrow">Prefer to skip the form?</p>
                 <p>
-                  <a href="mailto:r4r@universalai.edu">Rush4Rush@universalai.in</a>
+                  <a href="mailto:Rush4Rush@universalai.in">Rush4Rush@universalai.in</a>
                 </p>
                 <p className="contact-note">For sponsorships, press, and general queries.</p>
               </div>
               <div className="contact-direct-block">
                 <p className="eyebrow">Call the desk</p>
                 <p>
-                  <a href="tel:+912212345678">+91-9753021665 or +91-9823294222</a>
+                  <a href="tel:+919753021665">+91-9753021665</a> or{" "}
+                  <a href="tel:+919823294222">+91-9823294222</a>
                 </p>
                 <p className="contact-note">Weekdays, 10:00–18:00 IST.</p>
               </div>

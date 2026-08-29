@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { apiGet } from "@/lib/api-client";
+import { posters } from "@/data/posters";
 import { useAuth } from "@/components/auth-provider";
 
 const categories = ["All", "Culture", "Business", "Tech", "Sports", "Social"] as const;
@@ -206,13 +208,19 @@ function EventCard({
   pass: PassStatus | null;
 }) {
   const cardRef = useRef<HTMLButtonElement>(null);
+  const poster = posters[event.id];
   return (
     <button
-      className="event-card"
+      className={poster ? "event-card has-poster" : "event-card"}
       ref={cardRef}
       type="button"
       onClick={() => cardRef.current && onOpen(event, cardRef.current)}
     >
+      {poster && (
+        <span className="event-card-poster" aria-hidden="true">
+          <Image src={poster} alt="" fill sizes="(max-width: 900px) 1px, 33vw" />
+        </span>
+      )}
       <div className="event-card-top">
         <span className="event-category">{event.category}</span>
         <span className="event-day">{dayLabel(event)}</span>
