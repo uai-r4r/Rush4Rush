@@ -237,7 +237,6 @@ function EventCard({
         </span>
         <span>{event.teamSize}</span>
       </div>
-      {passNote(pass) && <p className="pass-note">{passNote(pass)}</p>}
     </button>
   );
 }

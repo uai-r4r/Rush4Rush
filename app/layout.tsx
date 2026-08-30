@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import Navbar, { Footer } from "@/components/navbar";
+import { Reveal } from "@/components/reveal";
 import { getCurrentUser } from "@/lib/auth-server";
 
 export const metadata: Metadata = {
@@ -29,13 +30,14 @@ export default async function RootLayout({
   const user = await getCurrentUser();
 
   return (
-    <html lang="en" className="bg-background dark">
+    <html lang="en" className="bg-background dark" data-scroll-behavior="smooth">
       <body className="antialiased">
         <AuthProvider initialUser={user}>
           <Navbar />
           {children}
           <Footer />
         </AuthProvider>
+        <Reveal />
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
