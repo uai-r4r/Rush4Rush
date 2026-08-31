@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiGet } from "@/lib/api-client";
 import { posters } from "@/data/posters";
 import { useAuth } from "@/components/auth-provider";
+import { ShowcaseSection } from "@/components/showcase-section";
 
 const categories = ["All", "Culture", "Business", "Tech", "Sports", "Social"] as const;
 
@@ -337,6 +338,7 @@ export default function EventsPage() {
         {!filtered.length && (
           <p className="empty-state">No events match that signal. Try another filter.</p>
         )}
+        <ShowcaseSection />
       </main>
       {selected && (
         <EventModal
