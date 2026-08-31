@@ -32,6 +32,7 @@ const TARGETS = [
   ".stat-strip > *",
   ".about-section",
   ".schedule-block",
+  ".showcase-card",
   "[data-reveal]",
 ].join(", ");
 

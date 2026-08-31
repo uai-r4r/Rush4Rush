@@ -4112,6 +4112,12 @@ body::after {
 .team-grid > *:nth-child(4n + 4) {
   transition-delay: 0.18s;
 }
+.showcase-grid > *:nth-child(2) {
+  transition-delay: 0.08s;
+}
+.showcase-grid > *:nth-child(3) {
+  transition-delay: 0.16s;
+}
 @media (prefers-reduced-motion: reduce) {
   .reveal-init {
     opacity: 1;
@@ -4135,23 +4141,45 @@ body::after {
   max-width: 560px;
 }
 .showcase-grid {
+  align-items: start;
   display: grid;
-  gap: 1.6rem;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 .showcase-card {
-  background: var(--elevated);
+  background: linear-gradient(160deg, var(--elevated), rgba(9, 11, 23, 0.6));
   border: 1px solid var(--border);
+  border-radius: 18px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
   transition:
     border-color 0.25s ease,
-    box-shadow 0.25s ease;
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+.showcase-card::before {
+  background: linear-gradient(90deg, var(--primary), var(--cyan));
+  content: "";
+  height: 3px;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: opacity 0.25s ease;
+  z-index: 1;
 }
 .showcase-card:hover {
   border-color: var(--primary);
-  box-shadow: 0 0 28px rgba(255, 20, 152, 0.15);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(255, 20, 152, 0.2);
+  transform: translateY(-5px);
+}
+.showcase-card:hover::before {
+  opacity: 1;
 }
 /* Posters are portrait and vary in ratio, so the frame is fixed and the image
    is contained rather than cropped — cropping a poster cuts the title off. */
@@ -4168,7 +4196,7 @@ body::after {
 .showcase-body {
   display: flex;
   flex-direction: column;
-  padding: 1.6rem;
+  padding: 1.3rem;
 }
 .showcase-club {
   color: var(--cyan);
@@ -4179,11 +4207,11 @@ body::after {
   text-transform: uppercase;
 }
 .showcase-name {
-  font-size: 1.7rem;
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.05;
-  margin: 0.55rem 0 1.2rem;
+  margin: 0.5rem 0 1.1rem;
   text-transform: uppercase;
 }
 .showcase-meta {
@@ -4205,14 +4233,19 @@ body::after {
   font-size: 0.95rem;
   margin: 0.35rem 0 0;
 }
+.showcase-tags {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.2rem;
+}
 .showcase-tag {
-  align-self: flex-start;
   border: 1px solid var(--primary);
   border-radius: 999px;
   color: var(--primary);
   font-family: "Space Mono", monospace;
   font-size: 0.68rem;
-  margin-top: 1.2rem;
   padding: 0.4rem 0.9rem;
   text-transform: uppercase;
 }

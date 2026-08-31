@@ -43,7 +43,15 @@ function ShowcaseCard({ item }: { item: ShowcaseEvent }) {
           </div>
         </dl>
 
-        {item.tag && <span className="showcase-tag">{item.tag}</span>}
+        {item.tags && item.tags.length > 0 && (
+          <div className="showcase-tags">
+            {item.tags.map((tag) => (
+              <span className="showcase-tag" key={tag}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         <button
           className="showcase-toggle"

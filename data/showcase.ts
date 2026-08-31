@@ -17,8 +17,8 @@ export type ShowcaseEvent = {
     day: string;
     time: string;
     venue: string;
-    /** Optional pill, e.g. an on-site fee. Omit if there is nothing to say. */
-    tag?: string;
+    /** Optional pills, e.g. an on-site fee or a perk. Omit if there is nothing to say. */
+    tags?: string[];
     description: string;
   };
   
@@ -31,7 +31,7 @@ export type ShowcaseEvent = {
       day: "Day 1–2",
       time: "TBA",
       venue: "TBA",
-      tag: "Rs. 50 on site",
+      tags: ["Rs. 50 on site", "2X Reward"],
       description:
         "Rumble Racers is a racing-cum-combat mini-game developed in-house by the Robotics Club, where participants compete in pods of four, racing against each other while using in-game weapons to take down opponents and secure the win. Each participant will be required to pay an entry fee of Rs. 50, and the winner of each pod will receive a cash prize of Rs. 100.",
     },
