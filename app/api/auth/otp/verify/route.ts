@@ -63,12 +63,26 @@ export async function POST(req: Request) {
      * Instead, look at email_confirmed_at — that IS the discriminator, and it
      * tells us exactly which email Supabase just sent.
      */
-    const { data: authLookup } = await admin.auth.admin.listUsers();
-    const existing = authLookup?.users.find(
-      (u) => u.email?.toLowerCase() === email,
-    );
-    const primaryType = existing?.email_confirmed_at ? "magiclink" : "signup";
+        /**
+     * Look the user up directly. listUsers() is PAGINATED at 50, so past the
+     * first page it returned undefined, primaryType fell back to "signup", and
+     * every confirmed user's magiclink token was verified under the wrong type
+     * — reported by Supabase as otp_expired, which looked like an expiry bug
+     * for days.
+     */
+    const { data: profileRow } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
 
+    let confirmed = false;
+    if (profileRow?.id) {
+      const { data: userById } = await admin.auth.admin.getUserById(profileRow.id);
+      confirmed = Boolean(userById?.user?.email_confirmed_at);
+    }
+
+    const primaryType = confirmed ? "magiclink" : "signup";
     let result = await supabase.auth.verifyOtp({
       email,
       token: code,
