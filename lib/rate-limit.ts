@@ -15,7 +15,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
  */
 export const LIMITS = {
   otpSendPerEmail: { max: 3, windowSecs: 3600 },
-  otpSendPerIp: { max: 10, windowSecs: 3600 },
+  otpSendPerIp: { max: 300, windowSecs: 3600 },
   otpVerifyPerEmail: { max: 8, windowSecs: 900 },
   registerPerUser: { max: 30, windowSecs: 3600 },
   scanPerUser: { max: 600, windowSecs: 3600 },
