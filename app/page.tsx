@@ -27,6 +27,7 @@ const gallery = [
 
 function MerchPopup({ onClose }: { onClose: () => void }) {
   const featured = merch[0];
+
   return (
     <div className="merch-modal-backdrop" role="presentation" onClick={onClose}>
       <div
@@ -44,6 +45,7 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
         >
           ×
         </button>
+
         <div className="modal-image">
           <Image
             src="/merch/r4r-polo-collage.webp"
@@ -52,6 +54,7 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
             sizes="(max-width: 700px) 90vw, 400px"
           />
         </div>
+
         <div className="modal-copy">
           <p className="eyebrow">Limited drop // 001</p>
           <h2 id="merch-modal-title">
@@ -59,8 +62,16 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
             <br />
             <span>Wear the R4R.</span>
           </h2>
-          <p className="modal-price">School polos // Rs. {featured.price}</p>
-          <Link className="button button-primary" href="#merch" onClick={onClose}>
+
+          <p className="modal-price">
+            School polos // Rs. {featured.price}
+          </p>
+
+          <Link
+            className="button button-primary"
+            href="#merch"
+            onClick={onClose}
+          >
             Shop the drop
           </Link>
         </div>
@@ -74,8 +85,7 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
  *
  * Rumble Racers takes no online registration, so it has no card in the events
  * grid and is easy to miss entirely — this is the only place it gets promoted
- * on the home page. The button deep-links to the showcase section rather than
- * the top of /events, so people land on the thing they just read about.
+ * on the home page.
  */
 function ShowcasePopup({ onClose }: { onClose: () => void }) {
   return (
@@ -87,14 +97,16 @@ function ShowcasePopup({ onClose }: { onClose: () => void }) {
         aria-labelledby="showcase-popup-title"
         onClick={(event) => event.stopPropagation()}
       >
+        {/* Only Rumble Racers gets this extra class */}
         <button
-          className="modal-close"
+          className="modal-close showcase-modal-close"
           type="button"
           onClick={onClose}
           aria-label="Close popup"
         >
           ×
         </button>
+
         <div className="modal-image modal-image-dark">
           <Image
             src="/showcase/rumble-racers.webp"
@@ -103,14 +115,20 @@ function ShowcasePopup({ onClose }: { onClose: () => void }) {
             sizes="(max-width: 700px) 90vw, 400px"
           />
         </div>
+
         <div className="modal-copy">
           <p className="eyebrow">Also at the fest // no sign-up</p>
+
           <h2 id="showcase-popup-title">
             Race. Fight.
             <br />
             <span>Dominate.</span>
           </h2>
-          <p className="modal-price">Rumble Racers // Rs. 50 on site</p>
+
+          <p className="modal-price">
+            Rumble Racers // Rs. 50 on site
+          </p>
+
           <Link
             className="button button-primary"
             href="/events?section=showcase"
@@ -126,9 +144,11 @@ function ShowcasePopup({ onClose }: { onClose: () => void }) {
 
 export default function Page() {
   const { openEnrollment } = useAuth();
-  // Popups run in sequence, never stacked: merch first, then the showcase
-  // teaser once it is dismissed.
-  const [popup, setPopup] = useState<"none" | "merch" | "showcase">("none");
+
+  const [popup, setPopup] = useState<
+    "none" | "merch" | "showcase"
+  >("none");
+
   const [school, setSchool] = useState<MerchSchool>("music");
   const product = getMerchBySchool(school);
   const [size, setSize] = useState(product.sizes[1]);
@@ -139,7 +159,9 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    if (!product.sizes.includes(size)) setSize(product.sizes[1]);
+    if (!product.sizes.includes(size)) {
+      setSize(product.sizes[1]);
+    }
   }, [product, size]);
 
   return (
@@ -150,18 +172,22 @@ export default function Page() {
             <p className="eyebrow hero-eyebrow">
               Live protocol <span>//</span> initiated
             </p>
+
             <h1 id="hero-title">
               <span className="hero-line">R4R: THE</span>
               <span className="hero-line">ULTIMATE</span>
               <span className="hero-line pink">COLLEGE</span>
               <span className="hero-line pink">FESTIVAL</span>
             </h1>
+
             <div className="hero-summary">
               <p>
-                4th & 5th September. 21 clubs. 20 events. 1 unforgettable weekend. Plug into the digital rave and
-                experience the most kinetic campus event of the year.
+                4th & 5th September. 21 clubs. 20 events. 1 unforgettable
+                weekend. Plug into the digital rave and experience the most
+                kinetic campus event of the year.
               </p>
             </div>
+
             <div className="hero-actions" id="register">
               <button
                 className="button button-primary"
@@ -177,15 +203,18 @@ export default function Page() {
               >
                 Register now
               </button>
+
               <Link className="button button-outline" href="/events">
                 View lineup
               </Link>
             </div>
           </div>
+
           <div className="outline-art" aria-hidden="true">
             <span>R4R</span>
           </div>
         </section>
+
         <section className="stat-strip" aria-label="Festival statistics">
           <div>
             <strong>21</strong>
@@ -204,6 +233,7 @@ export default function Page() {
             <span>Campus</span>
           </div>
         </section>
+
         <section className="gallery-section" id="about">
           <div className="section-heading">
             <p className="eyebrow">Archive // 2026</p>
@@ -211,14 +241,21 @@ export default function Page() {
               Last year <span>at R4R.</span>
             </h2>
           </div>
+
           <div className="gallery-grid">
             {gallery.map((item) => (
               <div className={`gallery-item ${item.className}`} key={item.src}>
-                <Image src={item.src} alt={item.alt} fill sizes="(max-width: 700px) 100vw, 50vw" />
+                <Image
+                  src={item.src}
+                  alt={item.alt}
+                  fill
+                  sizes="(max-width: 700px) 100vw, 50vw"
+                />
               </div>
             ))}
           </div>
         </section>
+
         <section className="merch-section" id="merch">
           <div className="merch-image">
             <Image
@@ -229,12 +266,19 @@ export default function Page() {
               sizes="(max-width: 700px) 100vw, 55vw"
             />
           </div>
+
           <div className="merch-copy">
             <p className="eyebrow">Merch // Official uniform</p>
+
             <h2>
               Wear the <span>frequency.</span>
             </h2>
-            <div className="audience-toggle school-toggle" role="group" aria-label="Choose your school">
+
+            <div
+              className="audience-toggle school-toggle"
+              role="group"
+              aria-label="Choose your school"
+            >
               {merch.map((item) => (
                 <button
                   key={item.school}
@@ -247,9 +291,11 @@ export default function Page() {
                 </button>
               ))}
             </div>
+
             <p className="merch-school-name">{product.name}</p>
             <p className="merch-description">{product.description}</p>
             <p className="merch-price">Rs. {product.price}</p>
+
             <div className="size-selector" aria-label="Choose size">
               {product.sizes.map((item) => (
                 <button
@@ -263,9 +309,11 @@ export default function Page() {
                 </button>
               ))}
             </div>
+
             <button className="button button-primary add-cart" type="button">
               Add to cart / {size}
             </button>
+
             <p className="micro-copy">
               One polo per school. Limited run, no restocks.
               <br />
@@ -273,18 +321,29 @@ export default function Page() {
             </p>
           </div>
         </section>
+
         <section className="closing-cta">
-          <p className="eyebrow">Transmission ends // until next time</p>
+          <p className="eyebrow">
+            Transmission ends // until next time
+          </p>
+
           <h2>
             Enter the <span>rush.</span>
           </h2>
+
           <Link className="button button-outline" href="/events">
             Explore all events
           </Link>
         </section>
       </main>
-      {popup === "merch" && <MerchPopup onClose={() => setPopup("showcase")} />}
-      {popup === "showcase" && <ShowcasePopup onClose={() => setPopup("none")} />}
+
+      {popup === "merch" && (
+        <MerchPopup onClose={() => setPopup("showcase")} />
+      )}
+
+      {popup === "showcase" && (
+        <ShowcasePopup onClose={() => setPopup("none")} />
+      )}
     </div>
   );
 }

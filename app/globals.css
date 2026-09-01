@@ -4311,3 +4311,6 @@ body::after {
 .modal-image.modal-image-dark {
   background: #05060d;
 }
+.showcase-modal-close {
+  color: white !important;
+}
