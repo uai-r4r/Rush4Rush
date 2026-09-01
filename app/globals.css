@@ -4294,3 +4294,20 @@ body::after {
     font-size: 1.45rem;
   }
 }
+
+/* The navbar is position:fixed, so an anchor jump lands the heading underneath
+   it. Push the scroll stop down past the bar. */
+   .showcase-section {
+    scroll-margin-top: 7rem;
+  }
+
+/* The navbar is position:fixed, so a jump lands the heading underneath it. */
+.showcase-section {
+  scroll-margin-top: 7rem;
+}
+/* .modal-image is white because the merch collage is shot on white and needs
+   the plate to blend. A poster is its own artwork — on white it gets bright
+   bars down each side. */
+.modal-image.modal-image-dark {
+  background: #05060d;
+}

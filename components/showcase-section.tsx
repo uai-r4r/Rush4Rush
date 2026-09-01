@@ -80,7 +80,11 @@ export function ShowcaseSection() {
   if (showcase.length === 0) return null;
 
   return (
-    <section className="showcase-section" aria-labelledby="showcase-title">
+    <section
+      className="showcase-section"
+      id="also-at-the-fest"
+      aria-labelledby="showcase-title"
+    >
       <p className="eyebrow" id="showcase-title">
         Also at the fest
       </p>

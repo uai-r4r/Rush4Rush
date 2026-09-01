@@ -69,15 +69,72 @@ function MerchPopup({ onClose }: { onClose: () => void }) {
   );
 }
 
+/**
+ * Second popup, shown once the merch one is dismissed.
+ *
+ * Rumble Racers takes no online registration, so it has no card in the events
+ * grid and is easy to miss entirely — this is the only place it gets promoted
+ * on the home page. The button deep-links to the showcase section rather than
+ * the top of /events, so people land on the thing they just read about.
+ */
+function ShowcasePopup({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="merch-modal-backdrop" role="presentation" onClick={onClose}>
+      <div
+        className="merch-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="showcase-popup-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          className="modal-close"
+          type="button"
+          onClick={onClose}
+          aria-label="Close popup"
+        >
+          ×
+        </button>
+        <div className="modal-image modal-image-dark">
+          <Image
+            src="/showcase/rumble-racers.webp"
+            alt="Rumble Racers poster"
+            fill
+            sizes="(max-width: 700px) 90vw, 400px"
+          />
+        </div>
+        <div className="modal-copy">
+          <p className="eyebrow">Also at the fest // no sign-up</p>
+          <h2 id="showcase-popup-title">
+            Race. Fight.
+            <br />
+            <span>Dominate.</span>
+          </h2>
+          <p className="modal-price">Rumble Racers // Rs. 50 on site</p>
+          <Link
+            className="button button-primary"
+            href="/events?section=showcase"
+            onClick={onClose}
+          >
+            Check it out
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Page() {
   const { openEnrollment } = useAuth();
-  const [showPopup, setShowPopup] = useState(false);
+  // Popups run in sequence, never stacked: merch first, then the showcase
+  // teaser once it is dismissed.
+  const [popup, setPopup] = useState<"none" | "merch" | "showcase">("none");
   const [school, setSchool] = useState<MerchSchool>("music");
   const product = getMerchBySchool(school);
   const [size, setSize] = useState(product.sizes[1]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setShowPopup(true), 600);
+    const timer = window.setTimeout(() => setPopup("merch"), 600);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -226,7 +283,8 @@ export default function Page() {
           </Link>
         </section>
       </main>
-      {showPopup && <MerchPopup onClose={() => setShowPopup(false)} />}
+      {popup === "merch" && <MerchPopup onClose={() => setPopup("showcase")} />}
+      {popup === "showcase" && <ShowcasePopup onClose={() => setPopup("none")} />}
     </div>
   );
 }
