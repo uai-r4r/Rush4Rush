@@ -1,27 +1,82 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { clubEvents, type ClubEvent } from "@/data/clubs";
+import { apiGet } from "@/lib/api-client";
+import { useAuth } from "@/components/auth-provider";
 
-const hours = Array.from({ length: 11 }, (_, i) => 10 + i);
-const colors: Record<ClubEvent["category"], string> = {
+/**
+ * Schedule, served from the DATABASE rather than data/clubs.ts.
+ *
+ * The static file had 23 events including the two collabs that were merged, no
+ * idea which events are published, and times that stopped matching reality the
+ * first time a club moved its slot. People were reading a timetable that
+ * disagreed with the ticket in their pocket.
+ */
+
+type ScheduleEvent = {
+  id: string;
+  eventName: string;
+  club: string;
+  clubs: string[];
+  tagline: string;
+  description: string;
+  fee: number;
+  feeFrom: number | null;
+  day: number;
+  startTime: string;
+  endTime: string;
+  venue: string;
+  category: string;
+  teamSize: string;
+  minTeamSize: number;
+  maxTeamSize: number;
+  spansBothDays: boolean;
+  isShowcase?: boolean;
+};
+
+const hours = Array.from({ length: 13 }, (_, i) => 8 + i);
+
+const colors: Record<string, string> = {
   Culture: "#ff1498",
   Business: "#ffc857",
   Tech: "#16d7ed",
   Sports: "#68e05f",
   Social: "#9b6cff",
 };
+const fallbackColor = "#9b6cff";
+
 function minutes(value: string) {
+  if (!value) return 0;
   const [h, m] = value.split(":").map(Number);
-  return h * 60 + m;
+  return (h || 0) * 60 + (m || 0);
 }
-function isNow(event: ClubEvent) {
+
+function isNow(event: ScheduleEvent) {
   const now = new Date();
   const current = now.getHours() * 60 + now.getMinutes();
   return current >= minutes(event.startTime) && current < minutes(event.endTime);
 }
 
-function EventModal({ event, onClose }: { event: ClubEvent; onClose: () => void }) {
+/** "Day 1", or "Day 1-2" for events running across both. */
+function dayLabel(event: ScheduleEvent) {
+  return event.spansBothDays ? "Day 1-2" : `Day ${event.day}`;
+}
+
+function priceLabel(event: ScheduleEvent) {
+  if (event.isShowcase) return "Open to all";
+  if (event.feeFrom !== null) return `From Rs. ${event.feeFrom}`;
+  return event.fee === 0 ? "Free" : `Rs. ${event.fee}`;
+}
+
+function EventModal({
+  event,
+  onClose,
+  onEnroll,
+}: {
+  event: ScheduleEvent;
+  onClose: () => void;
+  onEnroll: (event: ScheduleEvent) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -50,6 +105,7 @@ function EventModal({ event, onClose }: { event: ClubEvent; onClose: () => void 
       previous?.focus();
     };
   }, [onClose]);
+
   return (
     <div
       className="event-modal-backdrop"
@@ -70,16 +126,16 @@ function EventModal({ event, onClose }: { event: ClubEvent; onClose: () => void 
         >
           ×
         </button>
-        <p className="eyebrow">Event brief // day {event.day}</p>
+        <p className="eyebrow">Event brief // {dayLabel(event).toLowerCase()}</p>
         <p className="event-category">{event.category}</p>
         <h2 id="schedule-event-title">{event.eventName}</h2>
-        <p className="event-modal-club">Hosted by {event.clubs.join(" × ")}</p>
+        <p className="event-modal-club">Hosted by {event.club}</p>
         <p className="event-description">{event.description}</p>
         <div className="event-detail-grid">
           <div>
             <span>Schedule</span>
             <strong>
-              Day {event.day}, {event.startTime}–{event.endTime}
+              {dayLabel(event)}, {event.startTime}–{event.endTime}
             </strong>
           </div>
           <div>
@@ -92,15 +148,21 @@ function EventModal({ event, onClose }: { event: ClubEvent; onClose: () => void 
           </div>
           <div>
             <span>Entry</span>
-            <strong>Rs. {event.fee}</strong>
+            <strong>{priceLabel(event)}</strong>
           </div>
         </div>
-        <button
-          className="button button-primary event-enroll"
-          onClick={() => console.log("[v0] initiatePayment", event.id)}
-        >
-          Enroll — Rs.{event.fee}
-        </button>
+        {event.isShowcase ? (
+          <p className="showcase-note">
+            Open to everyone — just turn up. No registration needed.
+          </p>
+        ) : (
+          <button
+            className="button button-primary event-enroll"
+            onClick={() => onEnroll(event)}
+          >
+            Enroll
+          </button>
+        )}
       </div>
     </div>
   );
@@ -110,21 +172,30 @@ function ScheduleBlock({
   event,
   onOpen,
 }: {
-  event: ClubEvent;
-  onOpen: (event: ClubEvent, trigger: HTMLButtonElement) => void;
+  event: ScheduleEvent;
+  onOpen: (event: ScheduleEvent, trigger: HTMLButtonElement) => void;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
-  const top = ((minutes(event.startTime) - 600) / 60) * 72;
-  const height = ((minutes(event.endTime) - minutes(event.startTime)) / 60) * 72;
+  // Timeline starts at 08:00 rather than 10:00 — futsal opens at 09:00 and was
+  // being drawn above the top of the canvas.
+  const top = ((minutes(event.startTime) - 480) / 60) * 72;
+  const height = Math.max(
+    48,
+    ((minutes(event.endTime) - minutes(event.startTime)) / 60) * 72,
+  );
   return (
     <button
       ref={ref}
       className="schedule-block"
-      style={{ top, height, borderLeftColor: colors[event.category] }}
+      style={{
+        top,
+        height,
+        borderLeftColor: colors[event.category] ?? fallbackColor,
+      }}
       onClick={() => ref.current && onOpen(event, ref.current)}
     >
       <strong>{event.eventName}</strong>
-      <span>{event.clubs.join(" × ")}</span>
+      <span>{event.club}</span>
       <small>{event.venue}</small>
       {isNow(event) && <i className="now-dot" aria-label="Happening now" />}
     </button>
@@ -133,19 +204,46 @@ function ScheduleBlock({
 
 export default function SchedulePage() {
   const [day, setDay] = useState<1 | 2>(1);
-  const [selected, setSelected] = useState<ClubEvent | null>(null);
+  const [all, setAll] = useState<ScheduleEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<ScheduleEvent | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
+  const { openEnrollment } = useAuth();
+
+  useEffect(() => {
+    apiGet<{ events: ScheduleEvent[] }>("/api/events")
+      .then((res) => setAll(res.events))
+      .catch(() => setAll([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   const events = useMemo(
     () =>
-      clubEvents
-        .filter((e) => e.day === day)
+      all
+        // A two-day event belongs on BOTH tabs — someone checking Day 2 for
+        // the futsal tournament must not conclude it isn't running.
+        .filter((e) => e.day === day || e.spansBothDays)
         .sort((a, b) => minutes(a.startTime) - minutes(b.startTime)),
-    [day],
+    [all, day],
   );
+
   const close = () => {
     setSelected(null);
     setTimeout(() => trigger.current?.focus(), 0);
   };
+
+  function enroll(event: ScheduleEvent) {
+    setSelected(null);
+    openEnrollment({
+      eventId: event.id,
+      eventName: event.eventName,
+      fee: event.fee,
+      source: "event",
+      minTeamSize: event.minTeamSize,
+      maxTeamSize: event.maxTeamSize,
+    });
+  }
+
   return (
     <div className="festival-page">
       <main className="schedule-main">
@@ -181,59 +279,70 @@ export default function SchedulePage() {
             </span>
           ))}
         </div>
-        <section className="timeline-desktop" aria-label={`Day ${day} event timeline`}>
-          <div className="timeline-hours">
-            {hours.map((hour) => (
-              <span key={hour}>{String(hour).padStart(2, "0")}:00</span>
-            ))}
-          </div>
-          <div className="timeline-canvas">
-            {hours.map((hour) => (
-              <div className="hour-line" key={hour} style={{ top: (hour - 10) * 72 }} />
-            ))}
-            {events.map((event) => (
-              <ScheduleBlock
-                key={event.id}
-                event={event}
-                onOpen={(e, t) => {
-                  trigger.current = t;
-                  setSelected(e);
-                }}
-              />
-            ))}
-            {events.some(isNow) && (
-              <div
-                className="now-line"
-                style={{
-                  top: `${((new Date().getHours() * 60 + new Date().getMinutes() - 600) / 60) * 72}px`,
-                }}
-              >
-                <span>NOW</span>
+
+        {loading ? (
+          <p className="gated-copy">Loading the schedule…</p>
+        ) : events.length === 0 ? (
+          <p className="gated-copy">Nothing scheduled for day {day} yet.</p>
+        ) : (
+          <>
+            <section className="timeline-desktop" aria-label={`Day ${day} event timeline`}>
+              <div className="timeline-hours">
+                {hours.map((hour) => (
+                  <span key={hour}>{String(hour).padStart(2, "0")}:00</span>
+                ))}
               </div>
-            )}
-          </div>
-        </section>
-        <section className="schedule-mobile">
-          <p className="mobile-only-label">Day {day} // by hour</p>
-          {events.map((event) => (
-            <button
-              key={event.id}
-              className="schedule-mobile-item"
-              onClick={() => setSelected(event)}
-              style={{ borderLeftColor: colors[event.category] }}
-            >
-              <span>
-                {event.startTime}–{event.endTime}
-              </span>
-              <strong>{event.eventName}</strong>
-              <small>
-                {event.clubs.join(" × ")} // {event.venue}
-              </small>
-            </button>
-          ))}
-        </section>
+              <div className="timeline-canvas">
+                {hours.map((hour) => (
+                  <div className="hour-line" key={hour} style={{ top: (hour - 8) * 72 }} />
+                ))}
+                {events.map((event) => (
+                  <ScheduleBlock
+                    key={event.id}
+                    event={event}
+                    onOpen={(e, t) => {
+                      trigger.current = t;
+                      setSelected(e);
+                    }}
+                  />
+                ))}
+                {events.some(isNow) && (
+                  <div
+                    className="now-line"
+                    style={{
+                      top: `${((new Date().getHours() * 60 + new Date().getMinutes() - 480) / 60) * 72}px`,
+                    }}
+                  >
+                    <span>NOW</span>
+                  </div>
+                )}
+              </div>
+            </section>
+            <section className="schedule-mobile">
+              <p className="mobile-only-label">Day {day} // by hour</p>
+              {events.map((event) => (
+                <button
+                  key={event.id}
+                  className="schedule-mobile-item"
+                  onClick={() => setSelected(event)}
+                  style={{ borderLeftColor: colors[event.category] ?? fallbackColor }}
+                >
+                  <span>
+                    {event.startTime}–{event.endTime}
+                  </span>
+                  <strong>{event.eventName}</strong>
+                  <small>
+                    {event.club} // {event.venue}
+                  </small>
+                </button>
+              ))}
+            </section>
+          </>
+        )}
       </main>
-      {selected && <EventModal event={selected} onClose={close} />}
+      {selected && (
+        <EventModal event={selected} onClose={close} onEnroll={enroll} />
+      )}
     </div>
   );
 }
