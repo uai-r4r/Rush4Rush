@@ -43,6 +43,7 @@ export type ShowcaseEvent = {
       day: "Day 2",
       time: "TBA",
       venue: "TBA",
+      tags: ["Live Performance"],
       description:
         "Description coming soon — the band name is revealed on the day.",
     },
