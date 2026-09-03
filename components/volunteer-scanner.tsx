@@ -384,7 +384,7 @@ export function VolunteerScanner({
             <input
               type="tel"
               inputMode="numeric"
-              placeholder="Last 4+ digits of phone"
+              placeholder="Pls enter the phone number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && lookup()}
