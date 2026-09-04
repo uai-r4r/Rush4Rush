@@ -250,6 +250,34 @@ export default function EventsPage() {
   const [events, setEvents] = useState<ClubEvent[]>([]);
   const [pass, setPass] = useState<PassStatus | null>(null);
   const [loading, setLoading] = useState(true);
+
+  /**
+   * Deep link from the home-page popup: /events?section=showcase
+   *
+   * Gated on `loading` on purpose. The grid is fetched client-side, so before
+   * it lands the showcase section sits near the top of a short page — scroll
+   * to it then and the cards render above it a moment later, pushing it down
+   * and leaving the viewport back at the top. Waiting for the real layout is
+   * the only way the target stays put.
+   *
+   * A #hash is avoided because the browser jumps to it before paint, so the
+   * page looks like it opened already scrolled instead of navigating there.
+   */
+  useEffect(() => {
+    if (loading) return;
+    if (!new URLSearchParams(window.location.search).has("section")) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById("also-at-the-fest")?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+      // Drop the param so refresh or the back button does not scroll again.
+      window.history.replaceState(null, "", "/events");
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [loading]);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
