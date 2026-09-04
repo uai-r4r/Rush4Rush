@@ -10,6 +10,8 @@ const REASONS: Record<string, string> = {
   NEEDS_PASS: "Buy your festival pass first, then join the team.",
   ALREADY_REGISTERED: "You're already registered for this event.",
   TEAM_FULL: "That team is full — its leader can add a place from their ticket.",
+  PAYMENT_PENDING:
+    "You've already submitted a payment for this event. Ask an organiser to sort that out before joining a team.",
 };
 
 /**

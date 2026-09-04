@@ -4294,6 +4294,7 @@ body::after {
     font-size: 1.45rem;
   }
 }
+.team-line { display: block; margin-top: 2px; color: var(--hot-pink, #ff2d87); }
 
 /* The navbar is position:fixed, so an anchor jump lands the heading underneath
    it. Push the scroll stop down past the bar. */
