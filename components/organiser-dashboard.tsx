@@ -36,6 +36,9 @@ type Row = {
   proof_path: string | null;
   acquirer_ref: string | null;
   payer_ref: string | null;
+  team_code: string | null;
+  team_role: string | null;
+  team_leader_name: string | null;
   status: string;
   checked_in_at: string | null;
   registered_at: string;
@@ -49,18 +52,24 @@ type Payload = {
   proofUrls: Record<string, string>;
 };
 
-const statusLabel: Record<string, string> = {
-  confirmed: "Paid",
-  pending: "Pending",
-  cancelled: "Rejected",
-};
-
 /** Registration status, unless they are already through the door. */
 function displayStatus(row: Row) {
   if (row.checked_in_at) return "checked-in";
   if (row.status === "confirmed") return "paid";
   if (row.status === "cancelled") return "rejected";
   return "pending";
+}
+
+/**
+ * A team member joined with their leader's code and has no payment of their
+ * own. Showing "Paid" with no proof to view made club admins think something
+ * had broken.
+ */
+function statusText(row: Row) {
+  if (row.checked_in_at) return "Checked in";
+  if (row.status === "cancelled") return "Rejected";
+  if (row.status !== "confirmed") return "Pending";
+  return row.team_role === "Member" ? "Team member" : "Paid";
 }
 
 export function OrganiserDashboard({ user }: { user: CurrentUser }) {
@@ -82,7 +91,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
    * nothing to chase. "Needs review" shows only submissions with actual proof,
    * which is what a club admin is here to act on.
    */
-    const [view, setView] = useState<"Needs review" | "All" | "Confirmed">(
+  const [view, setView] = useState<"Needs review" | "All" | "Confirmed">(
     "Needs review",
   );
   const [proof, setProof] = useState<Row | null>(null);
@@ -143,7 +152,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return rows
-            .filter((row) => {
+      .filter((row) => {
         /**
          * Abandoned checkouts never appear, in any view.
          *
@@ -152,8 +161,14 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
          * pending row with no UTR and no screenshot. There is nothing to
          * approve and nobody to chase, and showing them means an organiser can
          * approve a payment that never happened.
+         *
+         * Team members are exempt: they have no payment of their own because
+         * their leader paid, so requiring proof would hide half of every team.
          */
-        const submitted = Boolean(row.proof_path) || Boolean(row.payer_ref);
+        const submitted =
+          Boolean(row.proof_path) ||
+          Boolean(row.payer_ref) ||
+          row.team_role === "Member";
         if (!submitted && row.status !== "confirmed") return false;
 
         if (view === "Needs review") {
@@ -164,7 +179,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
 
         if (eventFilter !== "All events" && row.event_name !== eventFilter) return false;
         if (!needle) return true;
-        return `${row.attendee_name ?? ""} ${row.email} ${row.phone ?? ""} ${row.registration_id}`
+        return `${row.attendee_name ?? ""} ${row.email} ${row.phone ?? ""} ${row.registration_id} ${row.team_code ?? ""}`
           .toLowerCase()
           .includes(needle);
       })
@@ -184,7 +199,8 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
 
   /**
    * Approve or reject a UPI payment. Approving flips every registration on
-   * that payment to confirmed, which is what makes the attendee's QR appear.
+   * that payment to confirmed, which is what makes the attendee's QR appear —
+   * including everyone in the payer's team.
    */
   async function review(row: Row, action: "approve" | "reject") {
     if (!row.payment_id) return;
@@ -204,9 +220,18 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
     }
   }
 
-  /** Only pending-review rows can be acted on, so only those are selectable. */
+  /**
+   * Only rows with a payment AND submitted proof can be acted on. A team
+   * member has neither — approving their leader confirms them automatically.
+   */
   const selectable = useMemo(
-    () => filtered.filter((r) => r.payment_status === "pending_review" && r.payment_id),
+    () =>
+      filtered.filter(
+        (r) =>
+          r.payment_status === "pending_review" &&
+          r.payment_id &&
+          (r.proof_path || r.payer_ref),
+      ),
     [filtered],
   );
 
@@ -322,7 +347,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
           <strong>{stats.total}</strong>
         </div>
         <div>
-          <span>Paid</span>
+          <span>Confirmed</span>
           <strong>{stats.paid}</strong>
         </div>
         <div>
@@ -342,7 +367,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
       <div className="dashboard-toolbar">
         <input
           aria-label="Search registrations"
-          placeholder="Search name, email, phone, or reference"
+          placeholder="Search name, email, phone, team code, or reference"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -357,7 +382,7 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
         <CustomListbox
           value={view}
           onChange={(v) => setView(v as typeof view)}
-                   options={["Needs review", "All", "Confirmed"]}
+          options={["Needs review", "All", "Confirmed"]}
           ariaLabel="Filter by status"
         />
         <CustomListbox
@@ -433,10 +458,10 @@ export function OrganiserDashboard({ user }: { user: CurrentUser }) {
               <tbody>
                 {filtered.map((row) => {
                   const state = displayStatus(row);
-                  
-const awaiting =
-  row.payment_status === "pending_review" &&
-  Boolean(row.proof_path || row.payer_ref);
+                  const isMember = row.team_role === "Member";
+                  const awaiting =
+                    row.payment_status === "pending_review" &&
+                    Boolean(row.proof_path || row.payer_ref);
                   return (
                     <tr key={row.registration_id}>
                       <td>
@@ -456,6 +481,18 @@ const awaiting =
                           {row.phone ?? "no phone"} · {row.college ?? "—"}
                           {row.is_uai ? " · UAI" : ""}
                         </small>
+                        {/* Own line, not nested inside the <small> above —
+                            nesting one inside the other is invalid HTML and
+                            rendered the team details jammed into the phone
+                            number. */}
+                        {row.team_code && (
+                          <small className="team-line">
+                            Team {row.team_code} · {row.team_role}
+                            {isMember && row.team_leader_name
+                              ? ` · paid by ${row.team_leader_name}`
+                              : ""}
+                          </small>
+                        )}
                       </td>
                       <td>
                         <strong>{row.event_name}</strong>
@@ -464,7 +501,7 @@ const awaiting =
                       <td>Rs. {row.amount_inr}</td>
                       <td>
                         <span className={`status status-${state}`}>
-                          {statusLabel[row.status] ?? row.status}
+                          {statusText(row)}
                         </span>
                       </td>
                       <td>
@@ -477,7 +514,13 @@ const awaiting =
                             View proof
                           </button>
                         ) : (
-                          <span className="muted-label">—</span>
+                          /* A blank cell here reads as missing data. Say why
+                             there is nothing to view. */
+                          <span className="muted-label">
+                            {isMember
+                              ? `Paid by ${row.team_leader_name ?? "team leader"}`
+                              : "—"}
+                          </span>
                         )}
                       </td>
                       <td>
@@ -502,7 +545,9 @@ const awaiting =
                             </button>
                           </>
                         ) : (
-                          <span className="muted-label">—</span>
+                          <span className="muted-label">
+                            {isMember ? "With team" : "—"}
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -538,6 +583,11 @@ const awaiting =
             </button>
             <p className="eyebrow">PAYMENT PROOF // Rs. {proof.amount_inr}</p>
             <h2>{proof.attendee_name ?? proof.email}</h2>
+            {proof.team_code && (
+              <p className="auth-hint">
+                Team {proof.team_code} — approving confirms every member.
+              </p>
+            )}
             {/* Signed URL, ~5 minute life. The bucket itself stays private. */}
             <button
               className="proof-image-button"

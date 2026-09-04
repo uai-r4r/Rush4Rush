@@ -4294,3 +4294,4 @@ body::after {
     font-size: 1.45rem;
   }
 }
+.team-line { display: block; margin-top: 2px; color: var(--hot-pink, #ff2d87); }

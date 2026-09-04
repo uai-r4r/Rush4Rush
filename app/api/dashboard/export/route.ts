@@ -61,6 +61,7 @@ export async function GET(req: Request) {
     const headers = [
       "Registration ID", "Club", "Event", "Name", "Email", "Phone",
       "UTR",
+      "Team Code", "Team Role", "Paid By",
       "College", "Year", "UAI Student", "Amount (INR)",
       "Payment", "Status", "Checked In", "Registered At",
     ];
@@ -72,6 +73,13 @@ export async function GET(req: Request) {
       // is ever populated for a given payment, so two columns just meant one
       // was always blank and looked broken.
       utrCell(String(r.acquirer_ref ?? r.payer_ref ?? "")),
+      /**
+       * Team columns. A member joined with their leader's code and has no
+       * payment of their own, so their UTR is legitimately blank — "Paid By"
+       * is what stops that reading as missing data. Sort by Team Code in Excel
+       * to see teams grouped.
+       */
+      r.team_code ?? "", r.team_role ?? "", r.team_leader_name ?? "",
       r.college, r.year_of_study, r.is_uai ? "Yes" : "No", r.amount_inr,
       r.payment_status, r.status,
       r.checked_in_at ? new Date(String(r.checked_in_at)).toLocaleString("en-IN") : "",
